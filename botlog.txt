@@ -1,0 +1,329 @@
+[2026-01-31T09:11:34.946Z] Bot is starting...
+[2026-01-31T09:11:37.654Z] Bot started successfully as KAI ON TOP#0275
+[2026-01-31T09:17:04.461Z] Command executed: lock by l.ltc
+[2026-01-31T09:17:28.586Z] Command executed: ban by l.ltc
+[2026-01-31T09:22:42.314Z] Bot is starting...
+[2026-01-31T09:22:45.193Z] Bot started successfully as KAI ON TOP#0275
+[2026-01-31T09:23:35.097Z] Command executed: ping by l.ltc
+[2026-01-31T09:31:44.891Z] Bot is starting...
+[2026-01-31T09:31:46.741Z] Bot started successfully as KAI ON TOP#0275
+[2026-01-31T09:33:06.052Z] Command executed: ban by l.ltc
+[2026-01-31T09:33:06.151Z] Command executed: ban by l.ltc
+[2026-01-31T09:33:34.526Z] Command executed: ban by l.ltc
+[2026-01-31T09:37:49.482Z] Command executed: unlock by l.ltc
+[2026-01-31T09:44:23.795Z] Bot is starting...
+[2026-01-31T09:44:25.889Z] Bot started successfully as KAI ON TOP#0275
+[2026-01-31T09:45:19.908Z] Command executed: ban by l.ltc
+[2026-01-31T09:45:49.388Z] Command executed: lock by kia.onlive
+[2026-01-31T09:47:56.927Z] Command executed: unlock by l.ltc
+[2026-01-31T09:54:05.711Z] Command executed: promote by l.ltc
+[2026-01-31T09:54:12.452Z] Command executed: demote by l.ltc
+[2026-01-31T09:54:23.792Z] Command executed: demote by l.ltc
+[2026-01-31T09:54:37.144Z] Command executed: promote by l.ltc
+[2026-01-31T09:55:18.676Z] Command executed: role by l.ltc
+[2026-01-31T09:55:55.223Z] Command executed: role by l.ltc
+[2026-01-31T09:56:27.072Z] Command executed: role by l.ltc
+[2026-01-31T09:56:38.172Z] Command executed: role by l.ltc
+[2026-01-31T09:56:51.425Z] Command executed: role by l.ltc
+[2026-01-31T09:56:57.197Z] Command executed: role by l.ltc
+[2026-01-31T10:03:29.385Z] Command executed: role by l.ltc
+[2026-01-31T10:03:49.104Z] Command executed: role by l.ltc
+[2026-01-31T10:04:09.860Z] Command executed: role by l.ltc
+[2026-01-31T10:09:19.193Z] Command executed: w by l.ltc
+[2026-01-31T10:10:55.943Z] Command executed: purge by l.ltc
+[2026-01-31T10:11:04.774Z] Command executed: purge by l.ltc
+[2026-01-31T10:11:20.004Z] Command executed: purge by l.ltc
+[2026-01-31T10:13:20.960Z] Command executed: ban by l.ltc
+[2026-01-31T10:14:50.090Z] Command executed: purge by l.ltc
+[2026-01-31T10:14:59.991Z] Command executed: purge by l.ltc
+[2026-01-31T10:40:49.313Z] Command executed: ban by l.ltc
+[2026-01-31T10:40:53.303Z] Command executed: kick by l.ltc
+[2026-01-31T10:41:49.025Z] Command executed: warn by l.ltc
+[2026-01-31T10:42:41.189Z] Error executing command timeout: Error: Cannot find module 'ms'
+Require stack:
+- C:\Users\asus\Desktop\security-bot\commands\mute.js
+- C:\Users\asus\Desktop\security-bot\index.js
+[2026-01-31T10:42:55.850Z] Command executed: warn by l.ltc
+[2026-01-31T10:43:05.796Z] Command executed: warnings by l.ltc
+[2026-01-31T10:43:15.200Z] Command executed: unwarn by l.ltc
+[2026-01-31T10:44:42.297Z] Command executed: lock by l.ltc
+[2026-01-31T10:44:55.649Z] Command executed: unlock by l.ltc
+[2026-01-31T10:55:16.164Z] Bot is starting...
+[2026-01-31T10:55:17.857Z] Bot started successfully as KAI ON TOP#0275
+[2026-01-31T10:55:27.509Z] Command executed: ping by l.ltc
+[2026-01-31T10:55:33.868Z] Command executed: kick by l.ltc
+[2026-01-31T10:55:45.078Z] Command executed: kick by l.ltc
+[2026-01-31T10:55:56.912Z] Command executed: kick by l.ltc
+[2026-01-31T10:58:31.577Z] Bot is starting...
+[2026-01-31T10:58:33.608Z] Bot started successfully as KAI ON TOP#0275
+[2026-01-31T10:59:13.542Z] Bot is starting...
+[2026-01-31T10:59:15.214Z] Bot started successfully as KAI ON TOP#0275
+[2026-01-31T10:59:16.642Z] Command executed: ping by l.ltc
+[2026-01-31T10:59:16.644Z] Command executed: ping by l.ltc
+[2026-01-31T10:59:33.924Z] Command executed: ping by l.ltc
+[2026-01-31T10:59:46.333Z] Command executed: ping by l.ltc
+[2026-01-31T12:13:25.682Z] Bot is starting...
+[2026-01-31T12:13:27.435Z] Bot started successfully as KAI ON TOP#0275
+[2026-01-31T12:17:59.775Z] Command executed: ping by l.ltc
+[2026-01-31T12:17:59.787Z] Command executed: ping by l.ltc
+[2026-01-31T12:18:21.014Z] Bot is starting...
+[2026-01-31T12:18:22.711Z] Bot started successfully as KAI ON TOP#0275
+[2026-01-31T12:26:29.107Z] Command executed: ping by l.ltc
+[2026-01-31T12:26:29.145Z] Command executed: ping by l.ltc
+[2026-01-31T12:26:39.853Z] Command executed: ping by l.ltc
+[2026-01-31T12:28:21.425Z] Bot is starting...
+[2026-01-31T12:28:24.361Z] Bot started successfully as KAI ON TOP#0275
+[2026-01-31T12:39:55.248Z] Bot is starting...
+[2026-01-31T12:39:56.776Z] Bot started successfully as KAI ON TOP#0275
+[2026-01-31T12:40:04.271Z] Command executed: w by l.ltc
+[2026-01-31T12:40:04.323Z] Command executed: w by l.ltc
+[2026-01-31T12:40:13.959Z] Command executed: whois by l.ltc
+[2026-01-31T12:43:32.250Z] Command executed: whois by l.ltc
+[2026-01-31T12:43:52.451Z] Bot is starting...
+[2026-01-31T12:43:54.133Z] Bot started successfully as KAI ON TOP#0275
+[2026-01-31T12:44:01.484Z] Command executed: whois by l.ltc
+[2026-01-31T12:44:33.460Z] Command executed: kick by l.ltc
+[2026-01-31T12:44:33.513Z] Command executed: kick by l.ltc
+[2026-01-31T12:44:47.190Z] Command executed: kick by l.ltc
+[2026-01-31T12:44:49.513Z] Command executed: ban by l.ltc
+[2026-01-31T12:47:14.697Z] Bot is starting...
+[2026-01-31T12:47:16.413Z] Bot started successfully as KAI ON TOP#0275
+[2026-01-31T12:47:21.506Z] Command executed: whois by l.ltc
+[2026-01-31T12:48:07.222Z] Command executed: ping by l.ltc
+[2026-01-31T12:48:21.213Z] Bot is starting...
+[2026-01-31T12:48:22.996Z] Bot started successfully as KAI ON TOP#0275
+[2026-01-31T12:54:24.302Z] Bot is starting...
+[2026-01-31T12:54:26.042Z] Bot started successfully as KAI ON TOP#0275
+[2026-01-31T12:54:35.076Z] Command executed: serverinfo by l.ltc
+[2026-01-31T12:58:20.948Z] Bot is starting...
+[2026-01-31T12:58:22.460Z] Bot started successfully as KAI ON TOP#0275
+[2026-01-31T13:06:17.140Z] Bot is starting...
+[2026-01-31T13:06:18.816Z] Bot started successfully as KAI ON TOP#0275
+[2026-01-31T13:06:36.812Z] Command executed: setbanlogchannel by l.ltc
+[2026-01-31T13:06:52.061Z] Command executed: setbanlogchannel by l.ltc
+[2026-01-31T13:07:16.179Z] Command executed: ban by l.ltc
+[2026-01-31T13:07:16.197Z] Command executed: ban by l.ltc
+[2026-01-31T13:07:16.559Z] Command executed: ban by l.ltc
+[2026-01-31T13:07:50.966Z] Command executed: unban by l.ltc
+[2026-01-31T13:21:16.227Z] Bot is starting...
+[2026-01-31T13:21:18.497Z] Bot started successfully as KAI ON TOP#0275
+[2026-01-31T13:21:33.071Z] Command executed: setbanlogchannel by l.ltc
+[2026-01-31T13:23:50.034Z] Bot is starting...
+[2026-01-31T13:23:51.573Z] Bot started successfully as KAI ON TOP#0275
+[2026-01-31T13:24:11.056Z] Command executed: setbanlogchannel by l.ltc
+[2026-01-31T13:24:38.256Z] Command executed: ban by l.ltc
+[2026-01-31T13:24:49.642Z] Command executed: ban by l.ltc
+[2026-01-31T13:24:58.312Z] Command executed: ban by l.ltc
+[2026-01-31T13:25:15.682Z] Command executed: ban by l.ltc
+[2026-01-31T13:27:47.486Z] Bot is starting...
+[2026-01-31T13:27:51.725Z] Bot started successfully as KAI ON TOP#0275
+[2026-01-31T13:28:13.645Z] Command executed: ban by l.ltc
+[2026-01-31T13:28:14.408Z] User banned: kia.onlive by KAI ON TOP#0275
+[2026-01-31T13:28:34.738Z] Command executed: unban by l.ltc
+[2026-01-31T13:29:20.708Z] Command executed: ban by l.ltc
+[2026-01-31T13:29:21.139Z] User banned: kia.onlive by KAI ON TOP#0275
+[2026-01-31T13:29:45.836Z] Command executed: ban by l.ltc
+[2026-01-31T13:29:56.480Z] Command executed: unban by l.ltc
+[2026-01-31T13:30:58.377Z] Command executed: ban by l.ltc
+[2026-01-31T13:30:58.876Z] User banned: kia.onlive by KAI ON TOP#0275
+[2026-01-31T13:33:59.365Z] Bot is starting...
+[2026-01-31T13:34:01.030Z] Bot started successfully as KAI ON TOP#0275
+[2026-01-31T13:35:01.911Z] Command executed: unban by l.ltc
+[2026-01-31T13:35:22.429Z] Command executed: ban by l.ltc
+[2026-01-31T13:35:22.577Z] User banned: kia.onlive by Dyno#3861
+[2026-01-31T13:36:30.164Z] Command executed: unban by l.ltc
+[2026-01-31T13:36:48.924Z] Command executed: ban by l.ltc
+[2026-01-31T13:36:49.435Z] User banned: kia.onlive by KAI ON TOP#0275
+[2026-01-31T13:38:20.756Z] Command executed: unban by l.ltc
+[2026-01-31T13:41:21.797Z] User banned: kia.onlive by Dyno#3861
+[2026-01-31T13:45:43.900Z] Bot is starting...
+[2026-01-31T13:45:45.535Z] Bot started successfully as KAI ON TOP#0275
+[2026-01-31T13:46:19.997Z] Command executed: setbanlogchannel by l.ltc
+[2026-01-31T13:47:42.152Z] Command executed: unban by l.ltc
+[2026-01-31T13:47:55.779Z] Command executed: ban by l.ltc
+[2026-01-31T13:48:24.276Z] Command executed: whois by l.ltc
+[2026-01-31T13:49:03.484Z] Command executed: serverinfo by l.ltc
+[2026-01-31T13:55:55.660Z] Bot is starting...
+[2026-01-31T13:55:57.189Z] Bot started successfully as KAI ON TOP#0275
+[2026-01-31T13:56:07.263Z] Bot is starting...
+[2026-01-31T13:56:10.015Z] Bot started successfully as KAI ON TOP#0275
+[2026-01-31T13:56:51.712Z] Command executed: setbanlogchannel by l.ltc
+[2026-01-31T14:15:25.677Z] Command executed: unban by l.ltc
+[2026-01-31T14:16:57.674Z] Command executed: role by l.ltc
+[2026-01-31T14:17:19.208Z] Command executed: role by l.ltc
+[2026-01-31T14:17:30.299Z] Command executed: w by kia.onlive
+[2026-01-31T14:17:41.031Z] Command executed: whois by kia.onlive
+[2026-01-31T14:18:08.038Z] Command executed: whois by kia.onlive
+[2026-01-31T14:24:10.325Z] Command executed: ban by l.ltc
+[2026-01-31T14:24:22.016Z] Command executed: unban by l.ltc
+[2026-01-31T14:58:55.705Z] Command executed: unban by l.ltc
+[2026-01-31T14:59:03.508Z] Command executed: unban by l.ltc
+[2026-01-31T16:18:46.739Z] Bot is starting...
+[2026-01-31T16:18:48.517Z] Bot started successfully as KAI ON TOP#0275
+[2026-01-31T16:19:20.046Z] Command executed: lock by l.ltc
+[2026-01-31T16:20:31.188Z] Command executed: setlogchannel by l.ltc
+[2026-01-31T16:20:42.064Z] Command executed: setlogchannel by l.ltc
+[2026-01-31T16:21:05.951Z] Command executed: kick by l.ltc
+[2026-01-31T16:21:52.981Z] Command executed: ban by l.ltc
+[2026-01-31T16:22:03.939Z] Command executed: kick by l.ltc
+[2026-01-31T16:23:15.792Z] Command executed: role by l.ltc
+[2026-01-31T16:23:29.552Z] Command executed: role by l.ltc
+[2026-01-31T16:23:47.293Z] Command executed: kick by l.ltc
+[2026-01-31T16:23:49.577Z] Command executed: warn by l.ltc
+[2026-01-31T16:23:55.142Z] Command executed: warnings by l.ltc
+[2026-01-31T16:24:01.044Z] Command executed: unwarn by l.ltc
+[2026-01-31T16:40:39.709Z] Command executed: ban by l.ltc
+[2026-01-31T16:40:48.814Z] Command executed: kick by l.ltc
+[2026-01-31T16:40:54.100Z] Command executed: warn by l.ltc
+[2026-01-31T16:40:59.613Z] Command executed: warn by l.ltc
+[2026-01-31T16:41:06.232Z] Command executed: warns by l.ltc
+[2026-01-31T16:41:12.674Z] Command executed: unwarn by l.ltc
+[2026-01-31T16:42:12.105Z] Command executed: timeout by l.ltc
+[2026-01-31T16:42:20.549Z] Command executed: removetimeout by l.ltc
+[2026-01-31T17:18:18.056Z] Command executed: whois by l.ltc
+[2026-01-31T18:13:36.480Z] Bot is starting...
+[2026-01-31T18:13:40.375Z] Bot started successfully as KAI ON TOP#0275
+[2026-01-31T18:14:32.977Z] Command executed: ping by l.ltc
+[2026-01-31T18:14:38.536Z] Error executing command setupticket: DiscordAPIError[50035]: Invalid Form Body
+components[0].components[0].emoji.name[COMPONENT_INVALID_EMOJI]: Invalid emoji
+[2026-01-31T18:18:11.528Z] Bot is starting...
+[2026-01-31T18:18:18.413Z] Bot started successfully as KAI ON TOP#0275
+[2026-01-31T18:18:34.757Z] Error executing command setupticket: DiscordAPIError[50035]: Invalid Form Body
+components[0].components[0].emoji.name[COMPONENT_INVALID_EMOJI]: Invalid emoji
+[2026-01-31T18:21:46.104Z] Bot is starting...
+[2026-01-31T18:21:50.167Z] Bot started successfully as KAI ON TOP#0275
+[2026-01-31T18:22:00.761Z] Command executed: purge by l.ltc
+[2026-01-31T18:22:09.855Z] Error executing command setupticket: DiscordAPIError[50035]: Invalid Form Body
+components[0].components[0].emoji.name[COMPONENT_INVALID_EMOJI]: Invalid emoji
+[2026-01-31T18:24:15.447Z] Command executed: ping by l.ltc
+[2026-01-31T18:24:21.086Z] Error executing command setupticket: DiscordAPIError[50035]: Invalid Form Body
+components[0].components[0].emoji.name[COMPONENT_INVALID_EMOJI]: Invalid emoji
+[2026-01-31T18:36:36.564Z] Bot is starting...
+[2026-01-31T18:36:40.862Z] Bot started successfully as KAI ON TOP#0275
+[2026-01-31T18:41:52.132Z] Bot is starting...
+[2026-01-31T18:41:53.650Z] Bot started successfully as KAI ON TOP#0275
+[2026-01-31T18:42:03.106Z] Error executing command setupticket: DiscordAPIError[50035]: Invalid Form Body
+components[0].components[0].emoji.name[COMPONENT_INVALID_EMOJI]: Invalid emoji
+[2026-01-31T18:42:03.135Z] Error executing command setupticket: DiscordAPIError[50035]: Invalid Form Body
+components[0].components[0].emoji.name[COMPONENT_INVALID_EMOJI]: Invalid emoji
+[2026-01-31T18:42:03.141Z] Error executing command setupticket: DiscordAPIError[50035]: Invalid Form Body
+components[0].components[0].emoji.name[COMPONENT_INVALID_EMOJI]: Invalid emoji
+[2026-01-31T18:51:00.723Z] Bot is starting...
+[2026-01-31T18:51:02.902Z] Bot started successfully as KAI ON TOP#0275
+[2026-01-31T18:52:08.849Z] Command executed: purge by l.ltc
+[2026-01-31T18:52:12.225Z] Command executed: purge by l.ltc
+[2026-01-31T18:52:15.627Z] Command executed: purge by l.ltc
+[2026-01-31T18:52:16.277Z] Error executing command setupticket: DiscordAPIError[50035]: Invalid Form Body
+components[0].components[0].emoji.name[COMPONENT_INVALID_EMOJI]: Invalid emoji
+[2026-01-31T18:52:16.299Z] Error executing command setupticket: DiscordAPIError[50035]: Invalid Form Body
+components[0].components[0].emoji.name[COMPONENT_INVALID_EMOJI]: Invalid emoji
+[2026-01-31T18:52:16.298Z] Error executing command setupticket: DiscordAPIError[50035]: Invalid Form Body
+components[0].components[0].emoji.name[COMPONENT_INVALID_EMOJI]: Invalid emoji
+[2026-01-31T18:52:16.489Z] Error executing command setupticket: DiscordAPIError[50035]: Invalid Form Body
+components[0].components[0].emoji.name[COMPONENT_INVALID_EMOJI]: Invalid emoji
+[2026-01-31T18:52:19.052Z] Command executed: purge by l.ltc
+[2026-01-31T19:01:49.739Z] Command executed: purge by l.ltc
+[2026-01-31T19:01:53.116Z] Command executed: purge by l.ltc
+[2026-01-31T19:01:54.993Z] Command executed: purge by l.ltc
+[2026-01-31T19:01:55.012Z] Command executed: purge by l.ltc
+[2026-01-31T19:01:55.021Z] Command executed: purge by l.ltc
+[2026-01-31T19:01:55.221Z] Command executed: purge by l.ltc
+[2026-01-31T19:01:56.531Z] Command executed: purge by l.ltc
+[2026-01-31T19:01:59.946Z] Command executed: purge by l.ltc
+[2026-01-31T19:02:26.938Z] Bot is starting...
+[2026-01-31T19:02:28.448Z] Bot started successfully as KAI ON TOP#0275
+[2026-01-31T19:02:35.305Z] Command executed: purge by l.ltc
+[2026-01-31T19:02:40.304Z] Command executed: purge by l.ltc
+[2026-01-31T19:04:17.669Z] Bot is starting...
+[2026-01-31T19:04:19.160Z] Bot started successfully as KAI ON TOP#0275
+[2026-01-31T19:04:43.003Z] Bot is starting...
+[2026-01-31T19:04:44.515Z] Bot started successfully as KAI ON TOP#0275
+[2026-01-31T19:04:59.675Z] Command executed: setupticket by l.ltc
+[2026-01-31T19:06:25.488Z] Bot is starting...
+[2026-01-31T19:06:28.353Z] Bot started successfully as KAI ON TOP#0275
+[2026-01-31T19:06:42.935Z] Command executed: purge by l.ltc
+[2026-01-31T19:06:52.045Z] Error executing command setupticket: DiscordAPIError[50035]: Invalid Form Body
+components[0].components[0].emoji.name[COMPONENT_INVALID_EMOJI]: Invalid emoji
+[2026-01-31T19:08:52.548Z] Bot is starting...
+[2026-01-31T19:08:54.107Z] Bot started successfully as KAI ON TOP#0275
+[2026-01-31T19:09:00.612Z] Command executed: purge by l.ltc
+[2026-01-31T19:09:04.486Z] Error executing command setupticket: DiscordAPIError[50035]: Invalid Form Body
+components[0].components[0].emoji.name[COMPONENT_INVALID_EMOJI]: Invalid emoji
+[2026-01-31T19:27:48.831Z] Bot is starting...
+[2026-01-31T19:27:52.877Z] Bot started successfully as KAI ON TOP#0275
+[2026-01-31T19:28:01.680Z] Command executed: purge by l.ltc
+[2026-01-31T19:28:10.629Z] Command executed: setupticket by l.ltc
+[2026-01-31T19:30:15.914Z] Command executed: lock by l.ltc
+[2026-01-31T19:36:40.852Z] Bot is starting...
+[2026-01-31T19:36:44.934Z] Bot started successfully as KAI ON TOP#0275
+[2026-01-31T19:37:10.609Z] Command executed: role by l.ltc
+[2026-01-31T19:37:22.518Z] Command executed: role by l.ltc
+[2026-01-31T19:40:43.919Z] Bot is starting...
+[2026-01-31T19:40:45.956Z] Bot started successfully as KAI ON TOP#0275
+[2026-01-31T19:40:57.729Z] Bot is starting...
+[2026-01-31T19:40:59.176Z] Bot started successfully as KAI ON TOP#0275
+[2026-01-31T19:41:59.550Z] Command executed: role by l.ltc
+[2026-01-31T19:41:59.608Z] Command executed: role by l.ltc
+[2026-01-31T19:42:19.405Z] Ticket interaction error: DiscordAPIError[10062]: Unknown interaction
+[2026-01-31T19:42:28.147Z] Ticket interaction error: DiscordAPIError[10062]: Unknown interaction
+[2026-01-31T19:45:34.956Z] Command executed: whois by l.ltc
+[2026-01-31T19:47:35.842Z] Ticket interaction error: DiscordAPIError[10062]: Unknown interaction
+[2026-01-31T19:48:30.027Z] Bot is starting...
+[2026-01-31T19:48:32.275Z] Bot started successfully as KAI ON TOP#0275
+[2026-01-31T19:48:42.988Z] Bot is starting...
+[2026-01-31T19:48:46.021Z] Bot started successfully as KAI ON TOP#0275
+[2026-01-31T19:49:06.445Z] Ticket interaction error: DiscordAPIError[10062]: Unknown interaction
+[2026-01-31T19:49:17.176Z] Ticket interaction error: DiscordAPIError[10062]: Unknown interaction
+[2026-01-31T19:50:29.553Z] Bot is starting...
+[2026-01-31T19:50:31.077Z] Bot started successfully as KAI ON TOP#0275
+[2026-01-31T19:51:49.822Z] Ticket interaction error: DiscordAPIError[10062]: Unknown interaction
+[2026-01-31T19:51:54.689Z] Uncaught Exception: DiscordAPIError[10062]: Unknown interaction
+[2026-01-31T19:53:42.891Z] Command executed: add by kia.onlive
+[2026-01-31T19:53:42.976Z] Command executed: add by kia.onlive
+[2026-01-31T19:53:45.614Z] Command executed: remove by kia.onlive
+[2026-01-31T19:53:45.674Z] Command executed: remove by kia.onlive
+[2026-01-31T19:53:54.284Z] Command executed: claim by kia.onlive
+[2026-01-31T19:53:54.495Z] Command executed: claim by kia.onlive
+[2026-01-31T19:54:07.288Z] Command executed: claim by l.ltc
+[2026-01-31T19:54:07.315Z] Command executed: claim by l.ltc
+[2026-02-01T06:17:10.402Z] Bot is starting...
+[2026-02-01T06:17:12.169Z] Bot started successfully as KAI ON TOP#0275
+[2026-02-01T06:34:50.150Z] Bot is starting...
+[2026-02-01T06:34:53.933Z] Bot started successfully as KAI ON TOP#0275
+[2026-02-01T06:35:18.240Z] Command executed: ping by l.ltc
+[2026-02-01T06:35:18.240Z] Command executed: ping by l.ltc
+[2026-02-01T06:35:41.860Z] Command executed: role by l.ltc
+[2026-02-01T06:36:32.790Z] Command executed: promote by l.ltc
+[2026-02-01T06:36:38.291Z] Command executed: demote by l.ltc
+[2026-02-01T06:37:00.664Z] Command executed: w by l.ltc
+[2026-02-01T06:37:11.650Z] Command executed: whois by l.ltc
+[2026-02-01T06:38:01.636Z] Command executed: timeout by l.ltc
+[2026-02-01T06:38:08.516Z] Command executed: removetimeout by l.ltc
+[2026-02-01T06:38:21.114Z] Command executed: warns by l.ltc
+[2026-02-01T06:38:32.622Z] Command executed: unwarn by l.ltc
+[2026-02-01T06:39:06.243Z] Ticket interaction error: DiscordAPIError[10062]: Unknown interaction
+[2026-02-01T06:43:23.262Z] Command executed: unclaim by l.ltc
+[2026-02-01T06:43:31.819Z] Command executed: claim by l.ltc
+[2026-02-01T07:01:44.449Z] Command executed: purge by l.ltc
+[2026-02-01T07:01:54.563Z] Command executed: purge by l.ltc
+[2026-02-01T07:02:09.472Z] Command executed: purge by l.ltc
+[2026-02-01T07:02:12.926Z] Command executed: purge by l.ltc
+[2026-02-01T07:02:16.859Z] Command executed: purge by l.ltc
+[2026-02-01T07:02:20.639Z] Command executed: purge by l.ltc
+[2026-02-01T07:02:24.060Z] Command executed: purge by l.ltc
+[2026-02-01T07:02:27.565Z] Command executed: purge by l.ltc
+[2026-02-01T07:02:31.098Z] Command executed: purge by l.ltc
+[2026-02-01T07:02:34.911Z] Command executed: purge by l.ltc
+[2026-02-01T07:02:51.153Z] Command executed: purge by l.ltc
+[2026-02-01T07:03:06.754Z] Command executed: purge by l.ltc
+[2026-02-01T07:03:10.203Z] Command executed: purge by l.ltc
+[2026-02-01T07:03:13.824Z] Command executed: purge by l.ltc
+[2026-02-01T07:03:17.977Z] Command executed: purge by l.ltc
+[2026-02-01T07:03:21.397Z] Command executed: purge by l.ltc
+[2026-02-01T07:03:24.834Z] Command executed: purge by l.ltc
+[2026-02-01T07:03:25.278Z] Unhandled Rejection: TypeError: Cannot read properties of null (reading 'tag')
+[2026-02-01T07:03:28.748Z] Command executed: purge by l.ltc
+[2026-02-01T07:03:28.749Z] Unhandled Rejection: TypeError: Cannot read properties of null (reading 'tag')
+[2026-02-01T07:03:32.830Z] Command executed: purge by l.ltc
+[2026-02-01T07:03:32.832Z] Unhandled Rejection: TypeError: Cannot read properties of null (reading 'tag')
+[2026-02-01T08:20:11.962Z] Command executed: kick by l.ltc
