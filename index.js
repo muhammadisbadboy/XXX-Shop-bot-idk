@@ -5,6 +5,24 @@ const fs = require('fs');
 const path = require('path');
 
 // -------------------------
+// Debug Environment Variables
+// -------------------------
+if (!process.env.TOKEN) {
+  console.error('❌ BOT TOKEN is missing! Make sure TOKEN is set in Railway Environment Variables or .env locally.');
+  process.exit(1);
+} else {
+  console.log('✅ BOT TOKEN detected (length):', process.env.TOKEN.length);
+}
+
+if (!process.env.OWNER_ID) {
+  console.warn('⚠️ OWNER_ID is missing! Maintenance commands may not work.');
+}
+
+if (!process.env.PREFIXES) {
+  console.log('ℹ️ PREFIXES not set, using default "."');
+}
+
+// -------------------------
 // Create Client
 // -------------------------
 const client = new Client({
@@ -14,7 +32,7 @@ const client = new Client({
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildMembers
   ],
-  partials: [Partials.Channel]
+  partials: [Partials.Channel, Partials.Message, Partials.Reaction]
 });
 
 // -------------------------
@@ -23,8 +41,8 @@ const client = new Client({
 client.commands = new Collection();
 client.prefixes = process.env.PREFIXES
   ? process.env.PREFIXES.split(',').map(p => p.trim())
-  : ['.']; // default prefix
-client.isMaintenance = false; // maintenance mode flag
+  : ['.'];
+client.isMaintenance = false;
 
 // -------------------------
 // Mod-Log System
@@ -39,11 +57,16 @@ client.getModLogChannel = async function (guild) {
   );
 
   if (!channel) {
-    channel = await guild.channels.create({
-      name: 'mod-logs',
-      type: ChannelType.GuildText,
-      reason: 'Auto-created moderation log channel'
-    }).catch(console.error);
+    try {
+      channel = await guild.channels.create({
+        name: 'mod-logs',
+        type: ChannelType.GuildText,
+        reason: 'Auto-created moderation log channel'
+      });
+    } catch (err) {
+      console.error('Failed to create mod-log channel:', err);
+      return null;
+    }
   }
 
   if (channel) client.modLogChannels.set(guild.id, channel);
@@ -60,6 +83,7 @@ client.logMod = async function (guild, embed) {
 // Load Commands Recursively
 // -------------------------
 function loadCommands(dir) {
+  if (!fs.existsSync(dir)) return;
   const files = fs.readdirSync(dir);
   for (const file of files) {
     const fullPath = path.join(dir, file);
@@ -91,7 +115,6 @@ if (fs.existsSync(eventPath)) {
     if (event.once) {
       client.once(event.name, (...args) => event.execute(...args, client));
     } else if (event.name !== 'messageCreate') {
-      // Important: skip messageCreate events here to avoid duplicates
       client.on(event.name, (...args) => event.execute(...args, client));
     }
   }
@@ -103,7 +126,6 @@ if (fs.existsSync(eventPath)) {
 client.on(Events.MessageCreate, async message => {
   if (!message.guild || message.author.bot) return;
 
-  // Maintenance check
   if (client.isMaintenance && message.author.id !== process.env.OWNER_ID) {
     const embed = {
       color: 0xe67e22,
@@ -113,7 +135,6 @@ client.on(Events.MessageCreate, async message => {
     return message.channel.send({ embeds: [embed] }).catch(() => {});
   }
 
-  // Find prefix
   const prefix = client.prefixes.find(p => message.content.startsWith(p));
   if (!prefix) return;
 
@@ -141,4 +162,7 @@ client.once(Events.ClientReady, () => {
 // -------------------------
 // Login
 // -------------------------
-client.login(process.env.TOKEN);
+client.login(process.env.TOKEN).catch(err => {
+  console.error('❌ Failed to login. Check TOKEN again!', err);
+  process.exit(1);
+});
