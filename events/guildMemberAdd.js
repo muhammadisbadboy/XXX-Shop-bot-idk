@@ -18,28 +18,28 @@ module.exports = {
                 });
             }
 
-            // 3️⃣ Generate random tuff welcome messages
+            // 3️⃣ Generate random professional-style welcome messages
             const welcomes = [
-                `🔥 Brace yourself, ${member} has entered the chaos!`,
-                `💀 Another victim joins the madness: ${member}`,
-                `⚡ Watch out! ${member} just stepped into our den.`,
-                `👑 Bow down, mortals! ${member} is now among us.`,
-                `💥 ${member}, welcome to the playground of legends.`
+                `🛡️ Attention! ${member} has joined our secure realm.`,
+                `🔐 New recruit detected: ${member}, proceed with caution.`,
+                `⚡ ${member} entered the MM domain — stay sharp.`,
+                `👑 ${member} is now part of the trusted circle.`,
+                `💥 ${member}, welcome to the most elite MM server.`
             ];
             const randomMsg = welcomes[Math.floor(Math.random() * welcomes.length)];
 
-            // 4️⃣ Fun panel design
+            // 4️⃣ Professional MM-style panel design
             const embed = new EmbedBuilder()
-                .setTitle('👋 Welcome to the server!')
+                .setTitle('🛡️ Welcome to the MM Server')
                 .setDescription(randomMsg)
-                .setColor('#FF0000')
+                .setColor('#1F1F2E') // dark professional tone
                 .setThumbnail(member.displayAvatarURL({ dynamic: true }))
                 .addFields(
-                    { name: 'Server Name', value: member.guild.name, inline: true },
+                    { name: 'Server', value: member.guild.name, inline: true },
                     { name: 'Member Count', value: `${member.guild.memberCount}`, inline: true },
-                    { name: 'Tough Level', value: '💥 Maximum', inline: true }
+                    { name: 'Trust Level', value: '🔹 Pending Verification', inline: true }
                 )
-                .setFooter({ text: 'Be ready to rumble!' })
+                .setFooter({ text: 'Prepare yourself — MM operations await.' })
                 .setTimestamp();
 
             // 5️⃣ Send the embed
