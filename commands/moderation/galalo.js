@@ -2,98 +2,89 @@ const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('
 
 module.exports = {
   name: 'galalo',
-  description: 'Dynamic offer panel command with countdown',
+  description: 'Offer panel: only CLAIM_ID can use, only mentioned user can click buttons',
   async execute(message, args, client) {
 
-    // Only CLAIM_ID role can use
-    if (!message.member.roles.cache.has(process.env.CLAIM_ID)) return;
+    // ✅ Only user with CLAIM_ID role can use
+    const CLAIM_ROLE_ID = '1465699111931215903';
+    const ACCEPT_ROLE_ID = '1465699224061743156';
+    const DECLINE_ROLE_ID = '1470527278432784416';
 
+    if (!message.member.roles.cache.has(CLAIM_ROLE_ID)) {
+      return; // silently fail if user doesn't have CLAIM_ID
+    }
+
+    // ✅ Must mention a user
     const targetUser = message.mentions.members.first();
-    if (!targetUser) return;
+    if (!targetUser) return; // silently fail if no mention
 
-    const regex = /"([^"]+)"/g;
-    const matches = [...message.content.matchAll(regex)];
-    const heading = matches[0]?.[1] || 'Exclusive Offer';
-    const description = matches[1]?.[1] || `<@${targetUser.id}>, you have a unique chance to participate in our system!`;
+    // Optional: heading & description
+    const heading = args[1] ? args[1] : '✨ Special Offer ✨';
+    const description = args[2] ? args[2] : `<@${targetUser.id}>, you have received an offer. Please choose wisely.`;
 
-    const H1T_ROLE = message.guild.roles.cache.get(process.env.H1T_ROLE);
-    const BLACKLIST_ROLE = message.guild.roles.cache.get(process.env.BLACKLIST_ROLE);
-    if (!H1T_ROLE || !BLACKLIST_ROLE) return;
-
-    // Embed with countdown
-    let timer = 180; // 3 min
+    // Build embed
     const embed = new EmbedBuilder()
-      .setTitle(`✨ ${heading} ✨`)
-      .setDescription(`${description}\n\n⏱ Time left: ${timer}s`)
-      .setColor('#3498db')
-      .setFooter({ text: `Interactive Offer • Only ${targetUser.user.tag} can respond` })
+      .setTitle(heading)
+      .setDescription(description)
+      .setColor('#00FFAA')
+      .setFooter({ text: 'Only the mentioned user can click the buttons.' })
       .setTimestamp();
 
+    // Build buttons
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId('acceptOffer')
-        .setLabel('✅ Accept Offer')
-        .setEmoji('🟢')
+        .setLabel('✅ Accept')
         .setStyle(ButtonStyle.Success),
       new ButtonBuilder()
-        .setCustomId('rejectOffer')
-        .setLabel('❌ Decline Offer')
-        .setEmoji('🔴')
+        .setCustomId('declineOffer')
+        .setLabel('❌ Decline')
         .setStyle(ButtonStyle.Danger)
     );
 
+    // Send panel
     const panelMessage = await message.channel.send({ embeds: [embed], components: [row] });
 
-    // Countdown interval
-    const interval = setInterval(async () => {
-      timer--;
-      if (timer <= 0) {
-        clearInterval(interval);
-        return panelMessage.edit({ content: '⏱ Offer expired without response.', embeds: [], components: [] });
-      }
-      const newEmbed = EmbedBuilder.from(embed).setDescription(`${description}\n\n⏱ Time left: ${timer}s`);
-      panelMessage.edit({ embeds: [newEmbed] }).catch(() => {});
-    }, 1000);
-
-    // Collector
+    // Collector (3 min)
     const collector = panelMessage.createMessageComponentCollector({ time: 180000 });
 
     collector.on('collect', async interaction => {
-      if (interaction.user.id !== targetUser.id)
+      // ✅ Only the mentioned user can click
+      if (interaction.user.id !== targetUser.id) {
         return interaction.reply({ content: '⚠️ Only the mentioned user can interact.', ephemeral: true });
+      }
 
       await interaction.deferUpdate();
-      clearInterval(interval);
 
       if (interaction.customId === 'acceptOffer') {
         try {
-          await targetUser.roles.add(H1T_ROLE);
+          await targetUser.roles.add(ACCEPT_ROLE_ID);
           const acceptedEmbed = new EmbedBuilder()
             .setTitle('🎉 Offer Accepted 🎉')
-            .setDescription(`<@${targetUser.id}> accepted!\n✅ Granted **${H1T_ROLE.name}**.\n💰 Potential reward: 100–500 coins`)
-            .setColor('#2ecc71')
+            .setDescription(`<@${targetUser.id}> accepted the offer.\n✅ Granted role!`)
+            .setColor('#00FF00')
             .setFooter({ text: 'Good choice!' })
             .setTimestamp();
 
-          panelMessage.edit({ embeds: [acceptedEmbed], components: [] });
+          await panelMessage.edit({ embeds: [acceptedEmbed], components: [] });
         } catch {
-          panelMessage.edit({ content: '❌ Failed to assign role.', embeds: [], components: [] });
+          await panelMessage.edit({ content: '❌ Failed to assign role.', embeds: [], components: [] });
         }
       }
 
-      if (interaction.customId === 'rejectOffer') {
+      if (interaction.customId === 'declineOffer') {
         try {
-          await targetUser.roles.add(BLACKLIST_ROLE);
-          const rejectedEmbed = new EmbedBuilder()
+          await targetUser.roles.add(DECLINE_ROLE_ID);
+          const declinedEmbed = new EmbedBuilder()
             .setTitle('❌ Offer Declined ❌')
-            .setDescription(`<@${targetUser.id}> declined.\nAssigned **${BLACKLIST_ROLE.name}**.`)
-            .setColor('#e74c3c')
+            .setDescription(`<@${targetUser.id}> declined the offer.\n❌ Assigned role.`)
+            .setColor('#FF0000')
             .setFooter({ text: 'Better luck next time!' })
             .setTimestamp();
 
-          panelMessage.edit({ embeds: [rejectedEmbed], components: [] });
+          await panelMessage.edit({ embeds: [declinedEmbed], components: [] });
         } catch {
-          panelMessage.edit({ content: '❌ Failed to assign role.', embeds: [], components: [] });
+          await panelMessage.edit({ content: '❌ Failed to assign role.', embeds: [], components: [] });
         }
       }
 
@@ -101,10 +92,9 @@ module.exports = {
     });
 
     collector.on('end', collected => {
-      clearInterval(interval);
-      if (!collected.size)
+      if (!collected.size) {
         panelMessage.edit({ content: '⏱ Panel expired without response.', embeds: [], components: [] });
+      }
     });
-
   }
 };
