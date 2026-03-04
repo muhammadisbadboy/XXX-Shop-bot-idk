@@ -1,4 +1,3 @@
-require('dotenv').config();
 const {
   Events,
   ActionRowBuilder,
@@ -15,8 +14,9 @@ const ticketManager = require('../utils/ticketManager');
 module.exports = {
   name: Events.InteractionCreate,
   async execute(interaction, client) {
-    const claimRoleId = process.env.CLAIM_ID;
-    const transcriptsChannelId = process.env.TICKET_TRANSCRIPTS_ID;
+    // Hardcoded role & channel IDs
+    const claimRoleId = '1465699111931215903';
+    const transcriptsChannelId = '1478762582994059305';
 
     // Helper to resolve member from mention, ID, username, or nickname
     async function resolveMember(guild, input) {
@@ -90,7 +90,6 @@ module.exports = {
         new ActionRowBuilder().addComponents(contactMethod)
       );
 
-      // ✅ FIX: Call showModal immediately, do NOT defer
       try {
         return await interaction.showModal(modal);
       } catch (err) {
@@ -287,7 +286,7 @@ module.exports = {
       }
 
       if (interaction.customId === 'removeUserSelect') {
-        const userId = interaction.values[0]; // ✅ FIXED: correct property for select menu
+        const userId = interaction.values[0];
         const member = await interaction.guild.members.fetch(userId).catch(() => null);
         if (!member) return interaction.update({ content: '❌ User not found.', components: [] }).catch(() => {});
         await ticketManager.removeUser(ticketChannel, member);

@@ -19,7 +19,7 @@ module.exports = {
     ];
 
     const embed = new EmbedBuilder()
-      .setTitle('🔒 ⚔ Kai Kingdom • Official Middleman Service ⚔')
+      .setTitle('🔒 Trade Market • Official Middleman Service ')
       .setDescription(`Welcome to **Kai Kingdom Secure Middleman System** — where your trades are safe, transparent, and protected.\n\u200B
 ✨ Verified middlemen ensure:
 • 🛡️ Safe Transactions – your assets are secure
