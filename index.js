@@ -1,26 +1,7 @@
-// index.js
 require('dotenv').config();
-const { Client, Collection, GatewayIntentBits, Partials, ChannelType, Events } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
-
-// -------------------------
-// Debug Environment Variables
-// -------------------------
-if (!process.env.TOKEN) {
-  console.error('❌ BOT TOKEN is missing! Make sure TOKEN is set in Railway Environment Variables or .env locally.');
-  process.exit(1);
-} else {
-  console.log('✅ BOT TOKEN detected (length):', process.env.TOKEN.length);
-}
-
-if (!process.env.OWNER_ID) {
-  console.warn('⚠️ OWNER_ID is missing! Maintenance commands may not work.');
-}
-
-if (!process.env.PREFIXES) {
-  console.log('ℹ️ PREFIXES not set, using default "."');
-}
+const { Client, Collection, GatewayIntentBits, Partials, ChannelType, Events, REST, Routes } = require('discord.js');
 
 // -------------------------
 // Create Client
@@ -32,7 +13,7 @@ const client = new Client({
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildMembers
   ],
-  partials: [Partials.Channel, Partials.Message, Partials.Reaction]
+  partials: [Partials.Channel]
 });
 
 // -------------------------
@@ -41,8 +22,8 @@ const client = new Client({
 client.commands = new Collection();
 client.prefixes = process.env.PREFIXES
   ? process.env.PREFIXES.split(',').map(p => p.trim())
-  : ['.'];
-client.isMaintenance = false;
+  : ['.']; // default prefix
+client.isMaintenance = false; // maintenance mode flag
 
 // -------------------------
 // Mod-Log System
@@ -57,16 +38,11 @@ client.getModLogChannel = async function (guild) {
   );
 
   if (!channel) {
-    try {
-      channel = await guild.channels.create({
-        name: 'mod-logs',
-        type: ChannelType.GuildText,
-        reason: 'Auto-created moderation log channel'
-      });
-    } catch (err) {
-      console.error('Failed to create mod-log channel:', err);
-      return null;
-    }
+    channel = await guild.channels.create({
+      name: 'mod-logs',
+      type: ChannelType.GuildText,
+      reason: 'Auto-created moderation log channel'
+    }).catch(console.error);
   }
 
   if (channel) client.modLogChannels.set(guild.id, channel);
@@ -103,8 +79,36 @@ loadCommands(path.join(__dirname, 'commands'));
 console.log(`✅ Loaded commands: ${[...client.commands.keys()].join(', ')}`);
 
 // -------------------------
-// Load Events
+// Register Ticket Commands (for testing)
+const ticketCmdsDir = path.join(__dirname, 'commands', 'ticketcmds');
+if (fs.existsSync(ticketCmdsDir)) {
+  const commandsArray = [];
+  for (const file of fs.readdirSync(ticketCmdsDir).filter(f => f.endsWith('.js'))) {
+    const command = require(path.join(ticketCmdsDir, file));
+    client.commands.set(command.data?.name || command.name, command);
+    if (command.data) commandsArray.push(command.data.toJSON());
+  }
+
+  // Register with Discord (guild commands)
+  if (process.env.CLIENT_ID && process.env.GUILD_ID && commandsArray.length) {
+    const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
+    (async () => {
+      try {
+        console.log('🔹 Registering ticket commands...');
+        await rest.put(
+          Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID),
+          { body: commandsArray }
+        );
+        console.log('✅ Ticket commands registered.');
+      } catch (err) {
+        console.error(err);
+      }
+    })();
+  }
+}
+
 // -------------------------
+// Load Events (except messageCreate)
 const eventPath = path.join(__dirname, 'events');
 if (fs.existsSync(eventPath)) {
   const eventFiles = fs.readdirSync(eventPath).filter(f => f.endsWith('.js'));
@@ -122,7 +126,6 @@ if (fs.existsSync(eventPath)) {
 
 // -------------------------
 // Handle Messages (Prefix Commands)
-// -------------------------
 client.on(Events.MessageCreate, async message => {
   if (!message.guild || message.author.bot) return;
 
@@ -153,16 +156,11 @@ client.on(Events.MessageCreate, async message => {
 });
 
 // -------------------------
-// Ready
-// -------------------------
+// Ready Event
 client.once(Events.ClientReady, () => {
   console.log(`🚀 Logged in as ${client.user.tag}`);
 });
 
 // -------------------------
 // Login
-// -------------------------
-client.login(process.env.TOKEN).catch(err => {
-  console.error('❌ Failed to login. Check TOKEN again!', err);
-  process.exit(1);
-});
+client.login(process.env.TOKEN).catch(err => console.error('Failed to login:', err));

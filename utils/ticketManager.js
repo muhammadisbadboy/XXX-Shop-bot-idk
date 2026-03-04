@@ -1,81 +1,180 @@
-const { ChannelType, PermissionFlagsBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const { v4: uuidv4 } = require('uuid');
-
-const tickets = new Map();
+// utils/ticketManager.js
+const { ChannelType, PermissionFlagsBits } = require('discord.js');
 
 module.exports = {
-  async handleCategorySelect(interaction, client) {
-    const category = interaction.values[0];
-    const guild = interaction.guild;
-    const ticketMaker = interaction.user;
+  /**
+   * Creates a ticket channel
+   * All overwrites are safe-checked
+   */
+  async createTicket(client, guild, ticketName, creatorId, claimRoleId, otherUserInput) {
+    // Fetch claim role from API to prevent cache issues
+    const claimRole = await guild.roles.fetch(claimRoleId).catch(() => null);
+    if (!claimRole) throw new Error('Claim role not found! Check CLAIM_ID in .env');
 
-    // Ensure Tickets category exists
-    let ticketsCategory = guild.channels.cache.find(c => c.name === 'Tickets' && c.type === ChannelType.GuildCategory);
-    if (!ticketsCategory) {
-      ticketsCategory = await guild.channels.create({
-        name: 'Tickets',
-        type: ChannelType.GuildCategory,
+    // Permission overwrites array
+    const overwrites = [
+      { id: guild.roles.everyone.id, deny: [PermissionFlagsBits.ViewChannel] }, // hide from everyone
+      { id: claimRole.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages] }, // CLAIM_ID role
+    ];
+
+    // Add ticket creator safely
+    const creator = await guild.members.fetch(creatorId).catch(() => null);
+    if (creator) {
+      overwrites.push({
+        id: creator.id,
+        allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages],
       });
     }
 
-    // Ensure transcript channel exists
-    let transcriptChannel = guild.channels.cache.find(c => c.name === 'ticket-transcripts' && c.type === ChannelType.GuildText);
-    if (!transcriptChannel) {
-      transcriptChannel = await guild.channels.create({
-        name: 'ticket-transcripts',
-        type: ChannelType.GuildText,
-        parent: ticketsCategory,
-        permissionOverwrites: [
-          { id: guild.roles.everyone, deny: [PermissionFlagsBits.ViewChannel] },
-        ],
-      });
+    // Add "Other Trader" robustly
+    if (otherUserInput) {
+      const otherUser = await this.resolveMember(guild, otherUserInput);
+      if (otherUser) {
+        overwrites.push({
+          id: otherUser.id,
+          allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages],
+        });
+      }
     }
 
-    const ticketId = uuidv4().split('-')[0];
-    const channelName = `${category.toLowerCase()}-${ticketId}`;
+    // Filter out any undefined/null overwrites (prevents InvalidType)
+    const validOverwrites = overwrites.filter(o => o && o.id);
 
-    // Create ticket channel
+    // Create the ticket channel
     const ticketChannel = await guild.channels.create({
-      name: channelName,
+      name: ticketName,
       type: ChannelType.GuildText,
-      parent: ticketsCategory,
-      permissionOverwrites: [
-        { id: guild.roles.everyone, deny: [PermissionFlagsBits.ViewChannel] },
-        { id: ticketMaker.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages] },
-      ],
+      permissionOverwrites: validOverwrites,
     });
 
-    tickets.set(ticketChannel.id, { ticketMaker: ticketMaker.id, category });
+    return ticketChannel;
+  },
 
-    // Fancy embed panel
-    const embed = new EmbedBuilder()
-      .setTitle(`🎫 Ticket: ${category}`)
-      .setDescription(`Hello <@${ticketMaker.id}>, a staff member with <@&${process.env.CLAIM_ID}> role will assist you shortly.\n\nPlease wait patiently. You can see your ticket info below.`)
-      .addFields(
-        { name: 'Ticket ID', value: ticketId, inline: true },
-        { name: 'Category', value: category, inline: true },
-        { name: 'Status', value: '🟡 Waiting...', inline: true },
-      )
-      .setColor(0x1d82f5);
+  /**
+   * Safely add a user to a ticket
+   * Accepts either a GuildMember/User object, a raw ID string, or a username/nickname
+   */
+  async addUser(ticketChannel, userInput) {
+    if (!userInput) return;
 
-    const row = new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId('claimTicket').setLabel('Claim').setStyle(ButtonStyle.Success),
-      new ButtonBuilder().setCustomId('unclaimTicket').setLabel('Unclaim').setStyle(ButtonStyle.Danger),
-      new ButtonBuilder().setCustomId('addUser').setLabel('Add').setStyle(ButtonStyle.Primary),
-      new ButtonBuilder().setCustomId('removeUser').setLabel('Remove').setStyle(ButtonStyle.Secondary),
+    const guild = ticketChannel.guild;
+    const member = userInput.id
+      ? userInput
+      : await this.resolveMember(guild, userInput);
+
+    if (!member) return;
+
+    await ticketChannel.permissionOverwrites.create(member.id, {
+      ViewChannel: true,
+      SendMessages: true,
+    });
+  },
+
+  /**
+   * Safely remove a user from a ticket
+   * Accepts either a GuildMember/User object or a raw ID string
+   */
+  async removeUser(ticketChannel, userOrId) {
+    if (!userOrId) return;
+
+    const userId = userOrId.id ? userOrId.id : userOrId;
+    if (!userId) return;
+
+    await ticketChannel.permissionOverwrites.delete(userId).catch(() => null);
+  },
+
+/**
+ * Close ticket with animated embed and transcript
+ */
+async closeTicket(ticketChannel, guild, transcriptsChannelId) {
+  // Cool closing animation embed
+  const closingEmbed = {
+    title: '🛑 Closing Ticket...',
+    description: 'Please wait while the ticket is being closed.',
+    color: 0xff0000,
+    fields: [{ name: 'Status', value: '0% complete' }],
+  };
+
+  const msg = await ticketChannel.send({ embeds: [closingEmbed] });
+
+  // Animation simulation (progress 0 → 100%)
+  for (let i = 10; i <= 100; i += 10) {
+    await new Promise(res => setTimeout(res, 300)); // 300ms delay
+    closingEmbed.fields[0].value = `${i}% complete`;
+    await msg.edit({ embeds: [closingEmbed] });
+  }
+
+  // Fetch last 100 messages
+  const messages = await ticketChannel.messages.fetch({ limit: 100 });
+  const htmlTranscript = `
+    <html>
+      <head><title>Ticket Transcript - ${ticketChannel.name}</title></head>
+      <body>
+        <h2>Transcript for #${ticketChannel.name}</h2>
+        <ul>
+          ${messages
+            .map(
+              m =>
+                `<li><strong>${m.author.tag}</strong> [${m.createdAt.toLocaleString()}]: ${m.content}</li>`
+            )
+            .reverse()
+            .join('\n')}
+        </ul>
+      </body>
+    </html>
+  `;
+
+  // Send transcript to the transcripts channel
+  const transcriptChannel = await guild.channels.fetch(transcriptsChannelId).catch(() => null);
+  if (transcriptChannel) {
+    await transcriptChannel.send({
+      content: `**Transcript for #${ticketChannel.name}**`,
+      files: [{ attachment: Buffer.from(htmlTranscript, 'utf-8'), name: `${ticketChannel.name}.html` }],
+    });
+  }
+
+  // Final closing embed
+  const closedEmbed = {
+    title: '✅ Ticket Closed',
+    description: `Ticket ${ticketChannel.name} has been successfully closed and transcript saved.`,
+    color: 0x00ff00,
+  };
+  await ticketChannel.send({ embeds: [closedEmbed] });
+
+  // Delete the ticket channel
+  await ticketChannel.delete();
+},
+
+  /**
+   * Helper: resolve member from mention, ID, username, or nickname
+   */
+  async resolveMember(guild, input) {
+    if (!input) return null;
+
+    // Mention format
+    if (/<@!?(\d+)>/.test(input)) {
+      const id = input.match(/<@!?(\d+)>/)[1];
+      return await guild.members.fetch(id).catch(() => null);
+    }
+
+    // ID number
+    if (!isNaN(input)) return await guild.members.fetch(input).catch(() => null);
+
+    // Search by username/nickname in cache first
+    const cached = guild.members.cache.find(
+      m =>
+        m.user.username.toLowerCase() === input.toLowerCase() ||
+        (m.nickname && m.nickname.toLowerCase() === input.toLowerCase())
     );
+    if (cached) return cached;
 
-    await ticketChannel.send({ content: `<@&${process.env.CLAIM_ID}> <@${ticketMaker.id}>`, embeds: [embed], components: [row] });
-    await interaction.reply({ content: `✅ Ticket created: ${ticketChannel}`, ephemeral: true });
-  },
-
-  async handleButton(interaction, client) {
-    // Add logic for Add/Remove/Claim/Unclaim with modals, animated progress bars, dynamic info
-    await interaction.reply({ content: 'Feature coming soon (Add/Remove/Claim/Unclaim) fully implemented!', ephemeral: true });
-  },
-
-  async handleModal(interaction, client) {
-    // Handle modal submission for ticket forms
-    await interaction.reply({ content: 'Form submitted successfully!', ephemeral: true });
+    // Fetch all members and search
+    return await guild.members.fetch().then(list =>
+      list.find(
+        m =>
+          m.user.username.toLowerCase() === input.toLowerCase() ||
+          (m.nickname && m.nickname.toLowerCase() === input.toLowerCase())
+      )
+    ).catch(() => null);
   },
 };

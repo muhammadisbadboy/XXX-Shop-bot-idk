@@ -13,6 +13,4 @@ Thumbs.db
 
 # Optional: lock files if you don’t want them
 package-lock.json
-yarn.lock".env" 
-".env" 
-.env 
+yarn.lock

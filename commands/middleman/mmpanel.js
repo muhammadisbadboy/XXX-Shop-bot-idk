@@ -1,60 +1,65 @@
-const { EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
+require('dotenv').config();
+const { EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
+const ticketManager = require('../../utils/ticketManager');
 
 module.exports = {
   name: 'mmpanel',
   async execute(message, args, client) {
+    // Only OWNER_ID can run
+    if (message.author.id !== process.env.OWNER_ID) return;
+
     const categories = [
-      { label: 'Crypto', value: 'Crypto', emoji: '💰' },
-      { label: 'In-game Items', value: 'InGame', emoji: '🎮' },
-      { label: 'NFT', value: 'NFT', emoji: '🖼️' },
-      { label: 'Services', value: 'Services', emoji: '⚙️' },
-      { label: 'Trading', value: 'Trading', emoji: '📈' },
-      { label: 'Accounts', value: 'Accounts', emoji: '🗝️' },
+      { label: 'Crypto', value: 'Crypto', emoji: '💸' },
+      { label: 'Game Items', value: 'InGame', emoji: '🕹️' },
+      { label: 'NFTs', value: 'NFT', emoji: '🖼️' },
+      { label: 'Services', value: 'Services', emoji: '🛠️' },
+      { label: 'Trading', value: 'Trading', emoji: '📊' },
+      { label: 'Accounts', value: 'Accounts', emoji: '🔑' },
       { label: 'Other', value: 'Other', emoji: '📌' },
     ];
 
     const embed = new EmbedBuilder()
       .setTitle('🔒 ⚔ Kai Kingdom • Official Middleman Service ⚔')
-      .setDescription(`Welcome to Kai Kingdom Secure Middleman System — your trades are safe, transparent, and protected.
-
+      .setDescription(`Welcome to **Kai Kingdom Secure Middleman System** — where your trades are safe, transparent, and protected.\n\u200B
 ✨ Verified middlemen ensure:
-• 🛡️ Safe Transactions
-• ❌ Zero Scam Tolerance
-• 🔍 Transparent Deal Handling
-• 💰 Secure Asset Holding
-
-━━━━━━━━━━━━━━━━
-📜 Middleman Rules
-• ✍️ Confirm deal terms clearly
-• 🔒 Terms locked after MM holds assets
-• ⚠️ Fake proof = blacklist
+• 🛡️ Safe Transactions – your assets are secure
+• ❌ Zero Scam Tolerance – strict rules enforced
+• 🔍 Transparent Deal Handling – full visibility
+• 💰 Secure Asset Holding – until deal completion
+━━━━━━━━━━━━━━━━━━━━━━
+📜 🛡️ Middleman Rules
+• ✍️ Both traders must confirm deal terms clearly
+• 🔒 Terms cannot be changed after MM holds assets
+• ⚠️ Fake proof = instant blacklist
 • 🚫 Impersonation = permanent ban
-• 💸 Crypto trades require TX proof
-• ✅ Payments verified before release
-• 🏛️ MM decision final
-
-━━━━━━━━━━━━━━━━
+• 💸 Crypto trades require valid TX proof
+• ✅ All payments must be verified before release
+• 🏛️ Middleman decision is final
+━━━━━━━━━━━━━━━━━━━━━━
 🛡️ Security Notice
-• ⚠️ Only trust official tickets
-• 💬 Staff never DM first
-• 🟢 Check role color & join date
-• 📚 Tickets logged & archived
-━━━━━━━━━━━━━━━━
-📌 Select trade category below to begin
+• ⚠️ Only trust tickets created via this official panel
+• 💬 Staff will never DM you first
+• 🟢 Check role color & join date before trusting anyone
+• 📚 All tickets are logged & archived
+━━━━━━━━━━━━━━━━━━━━━━
+📌 Select your trade category below to begin
 🎯 Make your trade safe, fast, and professional!`)
-      .setColor(0x1d82f5); // integer color
+      .setColor('#1F2937')
+      .setFooter({ text: 'Kai Kingdom MM Panel', iconURL: client.user.displayAvatarURL() })
+      .setTimestamp();
 
-    const select = new StringSelectMenuBuilder()
+    // Dropdown menu
+    const selectMenu = new StringSelectMenuBuilder()
       .setCustomId('ticketCategorySelect')
-      .setPlaceholder('Select trade category')
+      .setPlaceholder('➤ Select trade category')
       .addOptions(categories.map(c => ({
-        label: c.label,
+        label: `【${c.emoji}】 ${c.label}`,
         value: c.value,
-        emoji: c.emoji
+        description: `Start a ${c.label} trade ticket`,
       })));
 
-    const row = new ActionRowBuilder().addComponents(select);
+    const row = new ActionRowBuilder().addComponents(selectMenu);
 
-    await message.channel.send({ embeds: [embed], components: [row] }).catch(console.error);
-  },
+    await message.channel.send({ embeds: [embed], components: [row] });
+  }
 };
