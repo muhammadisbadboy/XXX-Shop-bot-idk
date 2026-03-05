@@ -11,30 +11,27 @@ module.exports = {
     const mmVouchesPath = path.join(__dirname, '../../db/mmVouches.json');
     const vouchData  = fs.existsSync(mmVouchesPath) ? JSON.parse(fs.readFileSync(mmVouchesPath)) : {};
 
-    // Fetch all members to include everyone with the role
+    // Fetch all members to ensure cache is updated
     await message.guild.members.fetch();
 
+    // Get all members with the role
     const members = message.guild.members.cache.filter(m => m.roles.cache.has(CLAIM_ROLE_ID));
 
     if (!members.size) return message.channel.send('⚠️ No middlemen found in the server.');
 
-    // Map member info with highest role ping and clean panel style
+    // Map member info: displayName, highest role ping, and vouches
     const memberList = members.map(m => {
       const vouches = vouchData[m.id] || 0;
       const highestRole = m.roles.highest.id !== message.guild.id
         ? `<@&${m.roles.highest.id}>`
         : 'No special role';
-      return `**${m.displayName}** • ${highestRole}\n**Vouches:** ${vouches}`;
+      return { display: `**${m.displayName}** • ${highestRole}\n**Vouches:** ${vouches}`, vouches };
     });
 
-    // Sort descending by vouches
-    memberList.sort((a, b) => {
-      const vA = parseInt(a.match(/Vouches:\s\*\*(\d+)\*\*/)[1]);
-      const vB = parseInt(b.match(/Vouches:\s\*\*(\d+)\*\*/)[1]);
-      return vB - vA;
-    });
+    // Sort by vouches descending
+    memberList.sort((a, b) => b.vouches - a.vouches);
 
-    // Pagination
+    // Pagination setup
     const pageSize = 10;
     let page = 0;
     const totalPages = Math.ceil(memberList.length / pageSize);
@@ -44,9 +41,9 @@ module.exports = {
       const end = start + pageSize;
       const currentMembers = memberList.slice(start, end);
 
-      // Elegant numbering with subtle separator
+      // Elegant numbering
       const formattedMembers = currentMembers
-        .map((m, i) => `\`•\` **${i + 1 + pageIndex*pageSize}.** ${m}`)
+        .map((m, i) => `\`•\` **${i + 1 + pageIndex*pageSize}.** ${m.display}`)
         .join('\n\n');
 
       return new EmbedBuilder()
@@ -59,7 +56,7 @@ module.exports = {
         .setAuthor({ name: 'Middlemen Leaderboard', iconURL: message.guild.iconURL({ dynamic: true }) });
     };
 
-    // Buttons for pagination
+    // Pagination buttons
     const prevButton = new ButtonBuilder()
       .setCustomId('prevPage')
       .setLabel('⬅️ Previous')
