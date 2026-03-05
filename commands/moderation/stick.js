@@ -4,23 +4,21 @@ let stickyMessages = {};
 
 module.exports = {
   name: 'stick',
-  description: 'Sticky system: .stick, .stickembed, .unstick',
+  description: 'Sticky system: .stick <message> | .stickembed <text> | .unstick',
 
-  async execute(message, args, client) {
+  async execute(message, args) {
     const REQUIRED_ROLE_ID = '1465697938155110411';
     const member = message.member;
     const requiredRole = message.guild.roles.cache.get(REQUIRED_ROLE_ID);
     if (!requiredRole) return;
 
     const hasPermission = member.roles.cache.some(r => r.position >= requiredRole.position);
-    if (!hasPermission) return;
+    if (!hasPermission) return message.reply('❌ You do not have permission to use this command.');
 
-    const subcommand = args[0]?.toLowerCase();
+    const commandType = args[0]?.toLowerCase();
 
-    // -------------------------
-    // Unstick
-    // -------------------------
-    if (subcommand === 'unstick') {
+    // ----------- UNSTICK -----------
+    if (commandType === 'unstick') {
       const data = stickyMessages[message.channel.id];
       if (!data) return message.reply('❌ No sticky message in this channel.');
 
@@ -33,10 +31,8 @@ module.exports = {
       return message.reply('✅ Sticky message removed.').then(m => setTimeout(() => m.delete().catch(() => {}), 5000));
     }
 
-    // -------------------------
-    // Stick Embed
-    // -------------------------
-    if (subcommand === 'stickembed') {
+    // ----------- STICK EMBED -----------
+    if (commandType === 'stickembed') {
       const embedContent = args.slice(1).join(' ');
       if (!embedContent) return message.reply('❌ Provide embed description to stick.');
 
@@ -48,16 +44,14 @@ module.exports = {
       const sent = await message.channel.send({ embeds: [embed] });
       stickyMessages[message.channel.id] = {
         type: 'embed',
-        message: embed,
+        messageData: embed.toJSON(), // store raw data for re-send
         lastId: sent.id
       };
 
       return message.delete().catch(() => {});
     }
 
-    // -------------------------
-    // Stick Text
-    // -------------------------
+    // ----------- STICK TEXT -----------
     const content = args.join(' ');
     if (!content) return message.reply('❌ Provide a message to stick.');
 
@@ -68,7 +62,7 @@ module.exports = {
 
     stickyMessages[message.channel.id] = {
       type: 'text',
-      message: content,
+      messageData: content,
       lastId: sent.id
     };
 
@@ -76,15 +70,14 @@ module.exports = {
   }
 };
 
-// -------------------------
-// Sticky Listener
-// -------------------------
+// ----------- STICKY LISTENER -----------
 module.exports.stickyListener = async (message) => {
   if (message.author.bot) return;
 
   const data = stickyMessages[message.channel.id];
   if (!data) return;
 
+  // delete previous sticky message
   try {
     const prev = await message.channel.messages.fetch(data.lastId).catch(() => null);
     if (prev) await prev.delete().catch(() => {});
@@ -92,10 +85,11 @@ module.exports.stickyListener = async (message) => {
 
   let newMsg;
   if (data.type === 'embed') {
-    newMsg = await message.channel.send({ embeds: [data.message] });
+    const embed = EmbedBuilder.from(data.messageData); // create fresh EmbedBuilder
+    newMsg = await message.channel.send({ embeds: [embed] });
   } else {
     newMsg = await message.channel.send({
-      content: data.message,
+      content: data.messageData,
       allowedMentions: { parse: [] }
     });
   }
