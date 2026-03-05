@@ -45,6 +45,7 @@ module.exports = {
     const ticketChannel = await guild.channels.create({
       name: ticketName,
       type: ChannelType.GuildText,
+      parent: '1466889112652087539', // CATEGORY ID ADDED
       permissionOverwrites: validOverwrites,
     });
 
