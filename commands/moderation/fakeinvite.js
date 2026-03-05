@@ -3,49 +3,47 @@ const { EmbedBuilder } = require('discord.js');
 
 module.exports = {
     name: 'fakeinvite',
-    description: 'Simulates an invite for testing the panel with two random users',
+    description: 'Simulates an invite with two random users for testing the panel',
     async execute(message, args) {
         const ALLOWED_USER_ID = '1112091588462649364';
         const INVITE_CHANNEL_ID = '1479054141312471092';
 
-        if (message.author.id !== ALLOWED_USER_ID) return; // silently ignore others
+        // Only allowed user can run
+        if (message.author.id !== ALLOWED_USER_ID) return;
 
         const guild = message.guild;
 
-        // Filter out bots
+        // Get all non-bot members
         const members = guild.members.cache.filter(m => !m.user.bot);
-        if (members.size < 2) return message.reply('❌ Not enough members to simulate.');
+        if (members.size < 2) return message.reply('❌ Not enough members to simulate invite.');
 
         // Pick two completely random members
-        let invitedMember = members.random();
-        let inviterMember = members.random();
+        const shuffled = members.random(2);
+        const member1 = shuffled[0];
+        const member2 = shuffled[1];
 
-        // Ensure they are not the same user
-        while (inviterMember.id === invitedMember.id) {
-            inviterMember = members.random();
-        }
+        // Generate random fake invite counts
+        const inviteCount1 = Math.floor(Math.random() * 50) + 1;
+        const inviteCount2 = Math.floor(Math.random() * 50) + 1;
 
-        // Generate fake invite count (for testing)
-        const fakeInviteCount = Math.floor(Math.random() * 50) + 1;
-
-        // Create professional panel embed
         const embed = new EmbedBuilder()
-            .setTitle('🎉 New Invite!')
-            .setDescription(`${invitedMember} has joined the server via an invite!`)
+            .setTitle('🎉 New Invites!')
+            .setDescription(`Two new members have joined the server via invites!`)
             .setColor('#00BFFF')
             .addFields(
-                { name: 'Invited Member', value: `${invitedMember}`, inline: true },
-                { name: 'Inviter', value: `${inviterMember}`, inline: true },
-                { name: 'Total Invites', value: `${fakeInviteCount}`, inline: true }
+                { name: 'Invited Member 1', value: `${member1}`, inline: true },
+                { name: 'Total Invites', value: `${inviteCount1}`, inline: true },
+                { name: 'Invited Member 2', value: `${member2}`, inline: true },
+                { name: 'Total Invites', value: `${inviteCount2}`, inline: true }
             )
             .setFooter({ text: 'Kai Kingdom Invite Tracker • Test Panel' })
             .setTimestamp();
 
-        // Send embed to the invite panel channel
+        // Fetch the fixed invite channel
         const inviteChannel = await guild.channels.fetch(INVITE_CHANNEL_ID).catch(() => null);
-        if (!inviteChannel) return;
+        if (!inviteChannel) return message.reply('❌ Invite channel not found.');
 
-        inviteChannel.send({ embeds: [embed] });
-        message.reply(`✅ Fake invite simulated: ${inviterMember.user.tag} invited ${invitedMember.user.tag}`);
+        await inviteChannel.send({ embeds: [embed] });
+        return message.reply(`✅ Fake invite simulated for ${member1.user.tag} and ${member2.user.tag}`);
     }
 };
