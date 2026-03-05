@@ -6,11 +6,12 @@ module.exports = {
   name: 'settrust',
   description: 'Set the trust score of a middleman (OWNER only)',
   async execute(message, args) {
-    const OWNER_ID = process.env.OWNER_ID;
-    const CLAIM_ROLE_ID = process.env.CLAIM_ID;
-    const LEADERBOARD_CHANNEL_ID = process.env.LEADERBOARD_CHANNEL_ID;
 
-    if (message.author.id !== OWNER_ID) return; // Do nothing if not OWNER
+    const OWNER_ID = process.env.OWNER_ID;
+    const CLAIM_ROLE_ID = '1465699111931215903'; // role('1465699111931215903')
+    const LEADERBOARD_CHANNEL_ID = '1479031321429807246'; // channel('1479031321429807246')
+
+    if (message.author.id !== OWNER_ID) return; // Only OWNER can execute
 
     if (!args[0] || !args[1]) {
       return message.channel.send('❌ Usage: .settrust @user <trustScore>');

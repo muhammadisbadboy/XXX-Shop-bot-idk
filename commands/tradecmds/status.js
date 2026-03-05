@@ -6,6 +6,7 @@ module.exports = {
   name: 'status',
   description: 'Set a middleman as active or inactive (OWNER_ID only)',
   async execute(message, args) {
+
     const OWNER_ID = process.env.OWNER_ID;
 
     // Only OWNER_ID can use
@@ -35,14 +36,17 @@ module.exports = {
     statusData[member.id] = statusInput.charAt(0).toUpperCase() + statusInput.slice(1);
     fs.writeFileSync(statusPath, JSON.stringify(statusData, null, 2));
 
-    // Beautiful embed confirmation
+    // Embed confirmation
     const embed = new EmbedBuilder()
       .setTitle(`⚡ MM Status Updated • ${member.user.tag}`)
       .setColor(statusInput === 'active' ? '#00FF00' : '#FF0000')
       .addFields(
         { name: 'New Status', value: statusData[member.id], inline: true },
         { name: 'Updated By', value: `<@${message.author.id}>`, inline: true },
-        { name: 'User ID', value: member.id, inline: true }
+        { name: 'User ID', value: member.id, inline: true },
+        { name: 'Role (Active MM)', value: `<@&1465699111931215903>`, inline: true },
+        { name: 'Role (Vouches)', value: `<@&1465698795164532933>`, inline: true },
+        { name: 'Status Channel', value: `<#1479031321429807246>`, inline: true }
       )
       .setFooter({ text: 'Kai Kingdom MM System • Security Bot' })
       .setTimestamp();

@@ -172,6 +172,38 @@ module.exports = {
       switch (interaction.customId) {
 
         case 'ticket-claim': {
+
+          const creator = ticketChannel.permissionOverwrites.cache.find(
+            o => o.type === 1 && o.allow.has('ViewChannel')
+          );
+
+          const addedUser = ticketChannel.permissionOverwrites.cache.filter(
+            o => o.type === 1 && o.allow.has('ViewChannel')
+          ).find(o => o.id !== creator?.id);
+
+          const overwrites = [
+            {
+              id: interaction.guild.roles.everyone,
+              deny: ['ViewChannel']
+            },
+            {
+              id: interaction.user.id,
+              allow: ['ViewChannel','SendMessages','ReadMessageHistory']
+            }
+          ];
+
+          if (creator) overwrites.push({
+            id: creator.id,
+            allow: ['ViewChannel','SendMessages','ReadMessageHistory']
+          });
+
+          if (addedUser && addedUser.id !== interaction.user.id) overwrites.push({
+            id: addedUser.id,
+            allow: ['ViewChannel','SendMessages','ReadMessageHistory']
+          });
+
+          await ticketChannel.permissionOverwrites.set(overwrites);
+
           const embed = new EmbedBuilder()
             .setTitle('✅ Ticket Claimed')
             .setDescription(`<@${interaction.user.id}> has claimed this ticket.`)
