@@ -7,8 +7,9 @@ const {
 const fs = require('fs').promises;
 const path = require('path');
 
-// Config from .env
-const OWNER_ID = process.env.OWNER_ID;
+// Owner IDs
+const OWNER_IDS = ['1165152007418560612', '1112091588462649364', '1365013388106666055'];
+
 const BAN_PERM = process.env.BAN_PERM;
 const WHITELIST = process.env.WHITELIST?.split(',') || [];
 const COOLDOWN_MS = 30 * 60 * 1000; // 30 minutes
@@ -24,14 +25,14 @@ module.exports = {
         // ----------------------
         // Permission check
         // ----------------------
-        if (authorId !== OWNER_ID && !message.member.roles.cache.some(r => r.name === BAN_PERM)) {
+        if (!OWNER_IDS.includes(authorId) && !message.member.roles.cache.some(r => r.name === BAN_PERM)) {
             return message.channel.send({ embeds: [new EmbedBuilder().setColor('#2b2d31').setDescription('❌ You do not have permission to use this command.')] });
         }
 
         // ----------------------
         // Cooldown check
         // ----------------------
-        if (authorId !== OWNER_ID && !WHITELIST.includes(authorId)) {
+        if (!OWNER_IDS.includes(authorId) && !WHITELIST.includes(authorId)) {
             const lastBan = cooldowns.get(authorId) || 0;
             const now = Date.now();
             if (now - lastBan < COOLDOWN_MS) {
@@ -93,9 +94,9 @@ module.exports = {
         const warnHistory = userWarns.length ? userWarns.map((w,i) => `#${i+1}: ${w.reason} (${w.date})`).join('\n') : 'No previous warns';
 
         // ----------------------
-        // OWNER_ID bypass
+        // OWNER bypass
         // ----------------------
-        if (authorId === OWNER_ID) {
+        if (OWNER_IDS.includes(authorId)) {
             try {
                 if (target) await target.ban({ reason });
                 await client.users.fetch(banId).then(u => u.send({ embeds: [dmEmbed] })).catch(() => {});
