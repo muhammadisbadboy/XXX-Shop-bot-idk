@@ -40,7 +40,7 @@ You have three minute to respond.\n
             .setTitle(`✨ ${heading} ✨`)
             .setDescription(description)
             .setColor('#00FFAA')
-            .setFooter({ text: `Anyone can click the buttons.` })
+            .setFooter({ text: `The decision is yours. Make it count.` })
             .setTimestamp();
 
         // Unique custom IDs tied to this specific user

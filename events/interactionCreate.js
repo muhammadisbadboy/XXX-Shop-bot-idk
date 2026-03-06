@@ -15,6 +15,8 @@ module.exports = {
   name: Events.InteractionCreate,
   async execute(interaction, client) {
 
+    if (!interaction.guild) return;
+
     const claimRoleId = '1465699111931215903';
     const transcriptsChannelId = '1478762582994059305';
 
@@ -133,7 +135,7 @@ module.exports = {
           { name: '👤 Ticket Creator', value: `<@${interaction.user.id}>`, inline: true }
         )
         .setColor('#1F2937')
-        .setFooter({ text: 'Kai Kingdom MM Ticket System' })
+        .setFooter({ text: 'Eldorado MM Ticket System' })
         .setTimestamp();
 
       const buttons = new ActionRowBuilder().addComponents(
@@ -158,7 +160,12 @@ module.exports = {
     // -----------------------------
     // Ticket Buttons
     // -----------------------------
-    if (interaction.isButton() && interaction.channel.name.startsWith('ticket-')) {
+    if (
+      interaction.isButton() &&
+      interaction.channel.name.startsWith('ticket-') &&
+      !interaction.customId.startsWith('acceptOffer_') &&
+      !interaction.customId.startsWith('rejectOffer_')
+    ) {
 
       const ticketChannel = interaction.channel;
 
@@ -174,12 +181,12 @@ module.exports = {
         case 'ticket-claim': {
 
           const creator = ticketChannel.permissionOverwrites.cache.find(
-            o => o.type === 1 && o.allow.has('ViewChannel')
+            o => o.type === 'member' && o.allow.has('ViewChannel')
           );
 
-          const addedUser = ticketChannel.permissionOverwrites.cache.filter(
-            o => o.type === 1 && o.allow.has('ViewChannel')
-          ).find(o => o.id !== creator?.id);
+          const addedUser = ticketChannel.permissionOverwrites.cache
+            .filter(o => o.type === 'member' && o.allow.has('ViewChannel'))
+            .find(o => o.id !== creator?.id);
 
           const overwrites = [
             {
