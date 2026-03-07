@@ -111,35 +111,38 @@ module.exports = {
         // ----------------------
         // OWNER / SERVER OWNER bypass panel
         // ----------------------
-        if (authorId === OWNER_ID || authorId === SERVER_OWNER) {
-            try {
-                if (target) await target.kick(reason);
-                await client.users.fetch(targetId).then(u => u.send({ embeds: [dmEmbed] })).catch(() => {});
+        try {
+            if (target) await target.kick(reason);
+            await client.users.fetch(targetId).then(u => u.send({ embeds: [dmEmbed] })).catch(() => {});
 
-                guildCases.push({ case: caseNumber, user: targetId, moderator: authorId, reason, action: 'kick', date: new Date() });
-                casesData[message.guild.id] = guildCases;
-                fs.writeFileSync(caseFile, JSON.stringify(casesData, null, 4));
+            guildCases.push({ case: caseNumber, user: targetId, moderator: authorId, reason, action: 'kick', date: new Date() });
+            casesData[message.guild.id] = guildCases;
+            fs.writeFileSync(caseFile, JSON.stringify(casesData, null, 4));
 
-                const modLog = await client.getModLogChannel(message.guild);
-                if (modLog) {
-                    const logEmbed = new EmbedBuilder()
-                        .setTitle('⚠️ Member Kicked')
-                        .setColor('#c0392b')
-                        .addFields(
-                            { name: 'User', value: targetTag, inline: false },
-                            { name: 'Moderator', value: message.author.tag, inline: false },
-                            { name: 'Reason', value: reason, inline: false },
-                            { name: 'Case Number', value: `#${caseNumber}`, inline: false }
-                        )
-                        .setTimestamp();
-                    modLog.send({ embeds: [logEmbed] });
-                }
-
-                return message.channel.send({ embeds: [new EmbedBuilder().setColor('#27ae60').setDescription(`✅ ${targetTag} kicked successfully.`)] });
-            } catch (err) {
-                console.error(err);
-                return message.channel.send({ embeds: [new EmbedBuilder().setColor('#e74c3c').setDescription('❌ Failed to kick.') ] });
+            const modLog = await client.getModLogChannel(message.guild);
+            if (modLog) {
+                const logEmbed = new EmbedBuilder()
+                    .setTitle('⚠️ Member Kicked')
+                    .setColor('#c0392b')
+                    .addFields(
+                        { name: 'User', value: targetTag, inline: false },
+                        { name: 'Moderator', value: message.author.tag, inline: false },
+                        { name: 'Reason', value: reason, inline: false },
+                        { name: 'Case Number', value: `#${caseNumber}`, inline: false }
+                    )
+                    .setTimestamp();
+                modLog.send({ embeds: [logEmbed] });
             }
-        }
 
-        // Rest of the file remains EXACTLY the same
+            // Update cooldown
+            if (authorId !== OWNER_ID && authorId !== SERVER_OWNER && !WHITELIST.includes(authorId)) {
+                cooldowns.set(authorId, Date.now());
+            }
+
+            return message.channel.send({ embeds: [new EmbedBuilder().setColor('#27ae60').setDescription(`✅ ${targetTag} kicked successfully.`)] });
+        } catch (err) {
+            console.error(err);
+            return message.channel.send({ embeds: [new EmbedBuilder().setColor('#e74c3c').setDescription('❌ Failed to kick.') ] });
+        }
+    }
+};
