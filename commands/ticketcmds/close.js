@@ -6,10 +6,11 @@ module.exports = {
   description: 'Close the ticket',
   async execute(message) {
     const userId = message.author.id;
-    const CLAIM_ID = process.env.CLAIM_ID;
-    const OWNER_ID = process.env.OWNER_ID;
 
-    if (![OWNER_ID, CLAIM_ID].includes(userId)) {
+    const OWNER_ID = '1112091588462649364';
+    const CLAIM_ROLE_ID = '1465699111931215903';
+
+    if (userId !== OWNER_ID && !message.member.roles.cache.has(CLAIM_ROLE_ID)) {
       return message.channel.send('❌ You are not authorized to close this ticket.');
     }
 
@@ -26,7 +27,6 @@ module.exports = {
 
     const msg = await ticketChannel.send({ embeds: [closingEmbed] }).catch(() => null);
 
-    // Animate progress
     if (msg) {
       for (let i = 10; i <= 100; i += 10) {
         await new Promise(res => setTimeout(res, 300));
@@ -35,7 +35,6 @@ module.exports = {
       }
     }
 
-    // Remove all users and delete ticket
     await ticketManager.closeTicket(ticketChannel).catch(() => {});
 
     const finalEmbed = new EmbedBuilder()

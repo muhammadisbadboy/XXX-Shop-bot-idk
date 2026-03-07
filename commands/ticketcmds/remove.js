@@ -6,10 +6,11 @@ module.exports = {
   description: 'Remove a user from the ticket by mention, username, or ID',
   async execute(message, args) {
     const userId = message.author.id;
-    const CLAIM_ID = process.env.CLAIM_ID;
-    const OWNER_ID = process.env.OWNER_ID;
 
-    if (![OWNER_ID, CLAIM_ID].includes(userId)) {
+    const OWNER_ID = '1112091588462649364';
+    const CLAIM_ROLE_ID = '1465699111931215903';
+
+    if (userId !== OWNER_ID && !message.member.roles.cache.has(CLAIM_ROLE_ID)) {
       return message.channel.send('❌ You are not authorized to use this command.');
     }
 
