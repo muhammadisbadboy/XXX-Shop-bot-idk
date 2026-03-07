@@ -7,10 +7,13 @@ module.exports = {
   async execute(message, args) {
     const userId = message.author.id;
 
-    const CLAIM_ID = '1465699111931215903';
     const OWNER_ID = '1112091588462649364';
+    const CLAIM_ID = '1465699111931215903';
 
-    if (![OWNER_ID, CLAIM_ID].includes(userId)) {
+    if (
+      userId !== OWNER_ID &&
+      !message.member.roles.cache.has(CLAIM_ID)
+    ) {
       return message.channel.send('❌ You are not authorized to use this command.');
     }
 
@@ -32,8 +35,9 @@ module.exports = {
       member = await message.guild.members.fetch(input).catch(() => null);
     } else {
       member = message.guild.members.cache.find(
-        m => m.user.username.toLowerCase() === input.toLowerCase() ||
-             (m.nickname && m.nickname.toLowerCase() === input.toLowerCase())
+        m =>
+          m.user.username.toLowerCase() === input.toLowerCase() ||
+          (m.nickname && m.nickname.toLowerCase() === input.toLowerCase())
       );
     }
 
