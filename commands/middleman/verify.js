@@ -1,50 +1,54 @@
-// commands/middleman/verify.js
-const { EmbedBuilder } = require('discord.js');
+// commands/util/verify.js
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
 module.exports = {
     name: 'verifypanel',
-    description: 'Sends a verification panel DM to users (currently disabled)',
-    async execute(message, args) {
-        const ALLOWED_USER_ID = '1112091588462649364'; // Only this ID can use the command
+    description: 'Creates a Trade Market verification panel with interactive button',
+    async execute(message, args, client) {
+        // -------------------------
+        // Only owner can run
+        // -------------------------
+        const ALLOWED_USER_ID = '1112091588462649364';
+        if (message.author.id !== ALLOWED_USER_ID) return;
 
         // -------------------------
-        // Restrict command usage
+        // Build verification embed
         // -------------------------
-        if (message.author.id !== ALLOWED_USER_ID) {
-            return message.reply('❌ You are not allowed to run this command.');
-        }
+        const embed = new EmbedBuilder()
+            .setTitle('🛡️ Trade Market Verification')
+            .setDescription('Click the button below to verify yourself!\n\n⚠️ **Note:** Feature is under maintenance, click will show info.')
+            .setColor('#8B5CF6') // Purple theme
+            .setFooter({ text: 'Trade Market • Verification System' })
+            .setTimestamp();
 
-        try {
-            // -------------------------
-            // Prepare DM embed
-            // -------------------------
-            const embed = new EmbedBuilder()
-                .setTitle('🔒 Trade Market Verification Panel')
-                .setDescription(
-                    '⚠️ **Verification System is currently unavailable**\n\n' +
-                    'The verification panel is temporarily not working.\n' +
-                    'Please **contact a staff member** for assistance.\n\n' +
-                    '💡 _This is an automated message for Trade Market users._'
-                )
-                .setColor('#8B5CF6') // Purple theme
-                .setFooter({ text: 'Trade Market • Verification System' })
-                .setTimestamp();
+        // -------------------------
+        // Build button
+        // -------------------------
+        const button = new ButtonBuilder()
+            .setCustomId('verify_click')
+            .setLabel('✅ Verify Me')
+            .setStyle(ButtonStyle.Primary);
 
-            // -------------------------
-            // Send DM to command executor (or could be channel)
-            // -------------------------
-            await message.author.send({ embeds: [embed] }).catch(() => {
-                message.reply('❌ Unable to DM the user. They may have DMs disabled.');
-            });
+        const row = new ActionRowBuilder().addComponents(button);
 
-            // -------------------------
-            // Optional confirmation in channel
-            // -------------------------
-            message.reply('✅ Verification panel DM sent (or attempted).');
+        // -------------------------
+        // Send panel
+        // -------------------------
+        const panel = await message.channel.send({ embeds: [embed], components: [row] });
 
-        } catch (err) {
-            console.error('Error in verify command:', err);
-            message.reply('❌ An error occurred while sending the verification panel.');
-        }
+        // -------------------------
+        // Collector for button clicks
+        // -------------------------
+        const collector = panel.createMessageComponentCollector({ time: 0 }); // permanent until bot restarts
+
+        collector.on('collect', async interaction => {
+            if (interaction.customId === 'verify_click') {
+                // Respond to user with ephemeral message
+                await interaction.reply({ 
+                    content: '⚠️ This feature is not working atm. Please contact staff.', 
+                    ephemeral: true 
+                }).catch(() => {});
+            }
+        });
     }
 };
