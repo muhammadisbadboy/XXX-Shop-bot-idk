@@ -3,7 +3,7 @@ const { EmbedBuilder } = require('discord.js');
 
 module.exports = {
     name: 'fakeinvite',
-    description: 'Simulates invite events for testing the panel',
+    description: 'Simulates an invite with two random users for testing the panel',
     async execute(message, args) {
         const ALLOWED_USER_ID = '1112091588462649364';
         const INVITE_CHANNEL_ID = '1479054141312471092';
@@ -16,71 +16,89 @@ module.exports = {
         if (members.size < 2) return message.reply('❌ Not enough members to simulate invite.');
 
         const shuffled = members.random(2);
-        const member = shuffled[0];
-        const inviter = shuffled[1];
+        const member1 = shuffled[0];
+        const member2 = shuffled[1];
 
-        const inviteCodes = ['tmA92', 'trade7X', 'market88', 'safeMM1', 'tmVIP'];
-        const randomCode = inviteCodes[Math.floor(Math.random() * inviteCodes.length)];
+        const inviteCount1 = Math.floor(Math.random() * 50) + 1;
+        const inviteCount2 = Math.floor(Math.random() * 50) + 1;
 
-        const inviteUses = Math.floor(Math.random() * 50) + 1;
+        const inviteCodes = [
+            'tradeX92', 'marketVIP', 'tmSafe', 'secureMM', 'tmDeals',
+            'tradeLink', 'vipEntry', 'tmGlobal', 'marketHub', 'safeTrade'
+        ];
 
-        const scenarios = ['normal', 'vanity', 'bot', 'alt'];
-        const scenario = scenarios[Math.floor(Math.random() * scenarios.length)];
+        const randomCode1 = inviteCodes[Math.floor(Math.random() * inviteCodes.length)];
+        const randomCode2 = inviteCodes[Math.floor(Math.random() * inviteCodes.length)];
 
-        let description = '';
-        let fields = [];
+        const vanityUsed = Math.random() < 0.25;
 
-        if (scenario === 'normal') {
-            description = `✨ ${member} joined **Trade Market** using an invite.`;
-            fields = [
-                { name: '👤 Member', value: `${member}`, inline: true },
-                { name: '📨 Invited By', value: `${inviter}`, inline: true },
-                { name: '🔗 Invite Code', value: `${randomCode}`, inline: true },
-                { name: '📊 Invite Uses', value: `${inviteUses}`, inline: true }
-            ];
-        }
-
-        if (scenario === 'vanity') {
-            description = `⭐ ${member} joined **Trade Market** using the **vanity invite**.`;
-            fields = [
-                { name: '👤 Member', value: `${member}`, inline: true },
-                { name: '🔗 Invite Type', value: 'Vanity URL', inline: true },
-                { name: '🏪 Server', value: 'Trade Market', inline: true }
-            ];
-        }
-
-        if (scenario === 'bot') {
-            description = `🤖 ${member} joined **Trade Market** (Bot detected).`;
-            fields = [
-                { name: '🤖 Bot', value: `${member}`, inline: true },
-                { name: '📨 Added By', value: `${inviter}`, inline: true },
-                { name: '🏪 Server', value: 'Trade Market', inline: true }
-            ];
-        }
-
-        if (scenario === 'alt') {
-            description = `⚠️ ${member} joined **Trade Market**.\nPossible **new/alt account detected**.`;
-            fields = [
-                { name: '👤 Member', value: `${member}`, inline: true },
-                { name: '📨 Invited By', value: `${inviter}`, inline: true },
-                { name: '🔗 Invite Code', value: `${randomCode}`, inline: true },
-                { name: '⚠️ Account Flag', value: 'New Account', inline: true }
-            ];
-        }
+        const accountAgeDays = Math.floor(Math.random() * 400);
+        const altWarning = accountAgeDays < 7 ? '⚠️ **Possible Alt Account**' : '✅ Normal Account';
 
         const embed = new EmbedBuilder()
-            .setTitle('🎉 Member Join Event')
-            .setDescription(description)
+            .setTitle('🎉 New Members Joined!')
+            .setDescription(`✨ Two new members have joined **Trade Market** via invites.`)
             .setColor('#8B5CF6')
-            .addFields(fields)
-            .setFooter({ text: 'Trade Market • Invite Tracker Test' })
+            .addFields(
+                {
+                    name: '👤 Member',
+                    value: `${member1}`,
+                    inline: true
+                },
+                {
+                    name: '📨 Invited By',
+                    value: `${member2}`,
+                    inline: true
+                },
+                {
+                    name: '🔗 Invite Code',
+                    value: vanityUsed ? '`vanity.gg/trademarket`' : `\`${randomCode1}\``,
+                    inline: true
+                },
+                {
+                    name: '📊 Invite Uses',
+                    value: `${inviteCount1}`,
+                    inline: true
+                },
+                {
+                    name: '📅 Account Age',
+                    value: `${accountAgeDays} days`,
+                    inline: true
+                },
+                {
+                    name: 'Security Check',
+                    value: altWarning,
+                    inline: true
+                },
+
+                {
+                    name: '👤 Member',
+                    value: `${member2}`,
+                    inline: true
+                },
+                {
+                    name: '📨 Invited By',
+                    value: `${member1}`,
+                    inline: true
+                },
+                {
+                    name: '🔗 Invite Code',
+                    value: `\`${randomCode2}\``,
+                    inline: true
+                },
+                {
+                    name: '📊 Invite Uses',
+                    value: `${inviteCount2}`,
+                    inline: true
+                }
+            )
+            .setFooter({ text: 'Trade Market • Invite Tracker Test System' })
             .setTimestamp();
 
         const inviteChannel = await guild.channels.fetch(INVITE_CHANNEL_ID).catch(() => null);
         if (!inviteChannel) return message.reply('❌ Invite channel not found.');
 
         await inviteChannel.send({ embeds: [embed] });
-
-        return message.reply(`✅ Fake invite event simulated (${scenario})`);
+        return message.reply(`✅ Fake invite simulated for ${member1.user.tag} and ${member2.user.tag}`);
     }
 };
