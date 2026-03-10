@@ -24,13 +24,13 @@ module.exports = {
                 .setTitle('🚀 Server Boost Alert!')
                 .setDescription(randomMsg)
                 .setColor('#FFD700') // golden boost theme
-                .setImage('https://cdn.discordapp.com/attachments/1465701908780945521/1479046250501378118/IMG-20260305-WA0004.jpg?ex=69aa9ca9&is=69a94b29&hm=aee4780f2bbd23c9c7fac73d694d3757a274e6b760884dedb676f2b32e9812df&')
+                .setImage('https://media.discordapp.net/attachments/1480184670606983240/1481043469962186846/file_00000000c2e87246a7a433b0c17cd064.png?ex=69b1e0b7&is=69b08f37&hm=ec9f33fd0ccfb6cf59ca892d689d1802270eb68208ccc066e905987fd2ef7132&=&format=webp&quality=lossless&width=1197&height=798')
                 .addFields(
                     { name: 'Booster', value: `${booster}`, inline: true },
                     { name: 'Server', value: guild.name, inline: true },
                     { name: 'Total Boosts', value: `${guild.premiumSubscriptionCount}`, inline: true }
                 )
-                .setFooter({ text: 'Thank you for supporting Eldorado.gg !' })
+                .setFooter({ text: 'Thank you for supporting Trade Market !' })
                 .setTimestamp();
 
             // 4️⃣ Send the embed in the fixed boosts channel
