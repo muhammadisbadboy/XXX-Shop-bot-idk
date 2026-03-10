@@ -7,10 +7,12 @@ const {
 const fs = require('fs').promises;
 const path = require('path');
 
-// Owner IDs
-const OWNER_IDS = ['1165152007418560612', '1112091588462649364', '1365013388106666055'];
+// ENV IDs
+const OWNER_IDS = process.env.OWNER_ID?.split(',') || [];
+const SERVER_OWNER = process.env.SERVER_OWNER?.split(',') || [];
+const ALL_OWNERS = [...new Set([...OWNER_IDS, ...SERVER_OWNER])];
 
-const BAN_PERM = process.env.BAN_PERM;
+const BAN_PERM = process.env.BAN_PERM; // ROLE NAME
 const WHITELIST = process.env.WHITELIST?.split(',') || [];
 const COOLDOWN_MS = 30 * 60 * 1000; // 30 minutes
 
@@ -25,14 +27,14 @@ module.exports = {
         // ----------------------
         // Permission check
         // ----------------------
-        if (!OWNER_IDS.includes(authorId) && !message.member.roles.cache.some(r => r.name === BAN_PERM)) {
+        if (!ALL_OWNERS.includes(authorId) && !message.member.roles.cache.some(r => r.name === BAN_PERM)) {
             return message.channel.send({ embeds: [new EmbedBuilder().setColor('#2b2d31').setDescription('❌ You do not have permission to use this command.')] });
         }
 
         // ----------------------
         // Cooldown check
         // ----------------------
-        if (!OWNER_IDS.includes(authorId) && !WHITELIST.includes(authorId)) {
+        if (!ALL_OWNERS.includes(authorId) && !WHITELIST.includes(authorId)) {
             const lastBan = cooldowns.get(authorId) || 0;
             const now = Date.now();
             if (now - lastBan < COOLDOWN_MS) {
@@ -96,7 +98,7 @@ module.exports = {
         // ----------------------
         // OWNER bypass
         // ----------------------
-        if (OWNER_IDS.includes(authorId)) {
+        if (ALL_OWNERS.includes(authorId)) {
             try {
                 if (target) await target.ban({ reason });
                 await client.users.fetch(banId).then(u => u.send({ embeds: [dmEmbed] })).catch(() => {});
