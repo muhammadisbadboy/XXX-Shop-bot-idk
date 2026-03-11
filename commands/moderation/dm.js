@@ -19,7 +19,7 @@ module.exports = {
   async execute(message, args, client) {
     const authorId = message.author.id;
 
-    if (authorId !== OWNER_ID && authorId !== SERVER_OWNER && !WHITELIST.includes(authorId)) {
+    if (![OWNER_ID, SERVER_OWNER].includes(authorId) && !WHITELIST.includes(authorId)) {
       return message.channel.send('❌ You do not have permission.');
     }
 
@@ -29,7 +29,7 @@ module.exports = {
     const text = args.slice(1).join(' ');
     const isEmbed = message.content.startsWith('.dmembed');
 
-    // Cooldown for non-owner
+    // Cooldown check
     if (![OWNER_ID, SERVER_OWNER].includes(authorId) && !WHITELIST.includes(authorId)) {
       const last = cooldowns.get(authorId) || 0;
       const now = Date.now();
@@ -87,22 +87,27 @@ module.exports = {
     const sentList = progressData[key] || [];
     const filteredUsers = usersToDM.filter(u => !sentList.includes(u.id));
 
-    if (!filteredUsers.length && !rolesToPing.length)
+    const totalUsersToSend = filteredUsers.length;
+
+    if (!totalUsersToSend && !rolesToPing.length)
       return message.channel.send('✅ All users have already received this DM.');
 
     // Confirmation panel
-    const targetFieldValue = [
+    let targetFieldValue = [
       ...rolesToPing.map(r => `Role: <@&${r.id}>`),
       ...filteredUsers.slice(0, 10).map(u => `User: <@${u.id}>`)
     ].join('\n');
+
     if (filteredUsers.length > 10) targetFieldValue += `\n...and ${filteredUsers.length - 10} more users`;
 
     const confirmEmbed = new EmbedBuilder()
       .setTitle('📨 DM Confirmation')
       .setColor('#3498db')
-      .setDescription(`You are about to send a DM to:`)
-      .addFields({ name: 'Targets', value: targetFieldValue })
-      .addFields({ name: 'Message', value: text.length > 1024 ? text.slice(0, 1020) + '...' : text })
+      .setDescription(`You are about to send a DM to ${totalUsersToSend} user(s)`)
+      .addFields(
+        { name: 'Targets', value: targetFieldValue },
+        { name: 'Message', value: text.length > 1024 ? text.slice(0, 1020) + '...' : text }
+      )
       .setFooter({ text: `Requested by ${message.author.tag}` })
       .setTimestamp();
 
@@ -149,6 +154,7 @@ module.exports = {
   }
 };
 
+// Send DMs smoothly with batch + resume support
 async function sendDMs(users, text, isEmbed, message, client, key, progressData, rolesToPing) {
   const progressEmbed = new EmbedBuilder()
     .setTitle('📨 Sending DMs...')
@@ -163,9 +169,7 @@ async function sendDMs(users, text, isEmbed, message, client, key, progressData,
 
   const progressMessage = await message.channel.send({ embeds: [progressEmbed], components: [cancelButton] });
 
-  let sent = 0,
-    failed = 0,
-    stopped = false;
+  let sent = 0, failed = 0, stopped = false;
 
   const collector = progressMessage.createMessageComponentCollector({ time: 0 });
   collector.on('collect', async i => {
@@ -177,37 +181,36 @@ async function sendDMs(users, text, isEmbed, message, client, key, progressData,
   for (let i = 0; i < users.length; i += BATCH_SIZE) {
     if (stopped) break;
     const batch = users.slice(i, i + BATCH_SIZE);
-    await Promise.all(
-      batch.map(async user => {
-        try {
-          if (isEmbed) {
-            const dmEmbed = new EmbedBuilder()
-              .setColor('#3498db')
-              .setTitle('📩 Message from Staff')
-              .setDescription(text)
-              .setFooter({ text: `Sent by ${message.author.tag}` })
-              .setTimestamp();
-            await user.send({ embeds: [dmEmbed] });
-          } else {
-            await user.send(text);
-          }
-          sent++;
-          progressData[key] = progressData[key] || [];
-          progressData[key].push(user.id);
-        } catch {
-          failed++;
-        }
-      })
-    );
 
-    // Update progress
+    await Promise.all(batch.map(async user => {
+      try {
+        if (isEmbed) {
+          const dmEmbed = new EmbedBuilder()
+            .setColor('#3498db')
+            .setTitle('📩 Message from Staff')
+            .setDescription(text)
+            .setFooter({ text: `Sent by ${message.author.tag}` })
+            .setTimestamp();
+          await user.send({ embeds: [dmEmbed] });
+        } else {
+          await user.send(text);
+        }
+        sent++;
+        progressData[key] = progressData[key] || [];
+        progressData[key].push(user.id);
+      } catch {
+        failed++;
+      }
+    }));
+
+    // Update progress message
     const barLength = 20;
     const bar = '█'.repeat(Math.floor((sent / users.length) * barLength)) + '—'.repeat(barLength - Math.floor((sent / users.length) * barLength));
     const updatedEmbed = EmbedBuilder.from(progressEmbed)
       .setDescription(`Progress: [${bar}]\n✅ Sent: ${sent}\n❌ Failed: ${failed}\n📨 Total: ${users.length}\nRoles pinged: ${rolesToPing.map(r => `<@&${r.id}>`).join(', ') || 'None'}`);
     await progressMessage.edit({ embeds: [updatedEmbed] });
 
-    await new Promise(res => setTimeout(res, 500)); // smooth sending
+    await new Promise(res => setTimeout(res, 500));
   }
 
   const finalEmbed = EmbedBuilder.from(progressEmbed)
@@ -216,7 +219,7 @@ async function sendDMs(users, text, isEmbed, message, client, key, progressData,
     .setDescription(`✅ Sent: ${sent}\n❌ Failed: ${failed}\n📨 Total: ${users.length}\nRoles pinged: ${rolesToPing.map(r => `<@&${r.id}>`).join(', ') || 'None'}`);
   await progressMessage.edit({ embeds: [finalEmbed], components: [] });
 
-  // Log to DM_LOG_CHANNEL
+  // DM Log
   const logChannel = message.guild.channels.cache.get(DM_LOG_CHANNEL);
   if (logChannel) {
     const logEmbed = new EmbedBuilder()
