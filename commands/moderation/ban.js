@@ -70,7 +70,7 @@ const targetTag = target?.user?.tag || args[0];
 // Self-ban protection
 // ----------------------
 if (banId === authorId) {
-    return message.channel.send({ embeds: [new EmbedBuilder().setColor('#e74c3c').setDescription('Omfg u cant ban urself, dumbfuck <:joedumb:1460339222711111792>')] });
+    return message.channel.send({ embeds: [new EmbedBuilder().setColor('#e74c3c').setDescription('Omfg u cant ban urself, dumbfuck')] });
 }
 
 // ----------------------
