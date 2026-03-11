@@ -1,7 +1,7 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
 // Set privileged IDs directly
-const OWNER_IDS = ['1112091588462649364', '1165152007418560612']; // OWNER_ID + SERVER_OWNER
+const OWNER_IDS = ['1112091588462649364', '1135999619541774386']; // OWNER_ID + SERVER_OWNER
 const WHITELIST = process.env.WHITELIST?.split(',') || [];
 const PURGE_PERM = process.env.PURGE_PERM;
 const PURGE_CHANNELS = process.env.PURGE_CHANNELS?.split(',') || [];

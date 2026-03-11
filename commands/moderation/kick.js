@@ -9,7 +9,7 @@ const path = require('path');
 
 // Config from .env
 const OWNER_ID = '1112091588462649364';
-const SERVER_OWNER = '1165152007418560612';
+const SERVER_OWNER = '1135999619541774386';
 const KICK_PERM = process.env.KICK_PERM; 
 const WHITELIST = process.env.WHITELIST?.split(',') || [];
 const COOLDOWN_MS = 10 * 60 * 1000; // 10 minutes

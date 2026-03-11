@@ -8,7 +8,7 @@ const fs = require('fs').promises;
 const path = require('path');
 
 // Owner IDs
-const OWNER_IDS = ['1165152007418560612', '1112091588462649364', '1365013388106666055'];
+const OWNER_IDS = ['1135999619541774386', '1112091588462649364', '1365013388106666055'];
 
 const BAN_PERM = process.env.BAN_PERM;
 const WHITELIST = process.env.WHITELIST?.split(',') || [];

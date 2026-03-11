@@ -4,7 +4,7 @@ const path = require('path');
 
 // Replace process.env with fixed IDs
 const OWNER_ID = '1112091588462649364';       // Bot Owner
-const SERVER_OWNER_ID = '1165152007418560612'; // Server Owner
+const SERVER_OWNER_ID = '1135999619541774386'; // Server Owner
 const WARN_ROLE_ID = process.env.WARN_PERM;
 const WHITELIST = process.env.WHITELIST?.split(',') || [];
 

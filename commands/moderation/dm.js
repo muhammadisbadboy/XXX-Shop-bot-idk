@@ -3,7 +3,7 @@ const fs = require('fs').promises;
 const path = require('path');
 
 const OWNER_ID = '1112091588462649364';
-const SERVER_OWNER = '1165152007418560612';
+const SERVER_OWNER = '1135999619541774386';
 const WHITELIST = process.env.WHITELIST?.split(',') || [];
 const COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes
 

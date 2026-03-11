@@ -9,7 +9,7 @@ const path = require('path');
 
 // Config from .env
 const OWNER_ID = '1112091588462649364';
-const SERVER_OWNER = '1165152007418560612';
+const SERVER_OWNER = '1135999619541774386';
 const TIMEOUT_PERM = process.env.TIMEOUT_PERM;
 
 module.exports = {

@@ -4,7 +4,7 @@ const path = require('path');
 
 // IDs for command access
 const OWNER_ID = '1112091588462649364';
-const SERVER_OWNER = '1165152007418560612';
+const SERVER_OWNER = '1135999619541774386';
 const WARN_ROLE_ID = process.env.WARN_PERM; 
 const WHITELIST = process.env.WHITELIST?.split(',') || [];
 
