@@ -4,31 +4,33 @@ const path = require('path');
 
 const OWNER_ID = '1112091588462649364';
 const SERVER_OWNER = '1135999619541774386';
-const WHITELIST = process.env.WHITELIST ? process.env.WHITELIST.split(',').map(id => id.trim()) : [];
-const COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes
+const WHITELIST = process.env.WHITELIST?.split(',') || [];
 const DM_LOG_CHANNEL = process.env.DM_LOG_CHANNEL;
+const COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes
+const BATCH_SIZE = 5;
 
 const cooldowns = new Map();
 const dataDir = path.join(__dirname, 'data');
 const progressFile = path.join(dataDir, 'dm_progress.json');
-const embedConfigFile = path.join(dataDir, 'dm_embed_config.json');
 
 module.exports = {
   name: 'dm',
-  description: 'Send DM to user(s) or role(s). Use .dmembed for embed messages.',
+  description: 'Send DMs to users or roles. Use .dmembed for embeds.',
   async execute(message, args, client) {
     const authorId = message.author.id;
 
-    if (authorId !== OWNER_ID && authorId !== SERVER_OWNER && !WHITELIST.includes(authorId))
+    if (authorId !== OWNER_ID && authorId !== SERVER_OWNER && !WHITELIST.includes(authorId)) {
       return message.channel.send('❌ You do not have permission.');
+    }
 
-    if (!args[0] || !args[1]) return message.channel.send('❌ Provide target(s) and a message.');
+    if (!args[0]) return message.channel.send('❌ Provide a user/role mention, ID, or name.');
+    if (!args[1]) return message.channel.send('❌ Provide a message to send.');
 
     const text = args.slice(1).join(' ');
     const isEmbed = message.content.startsWith('.dmembed');
 
-    // Cooldown
-    if (authorId !== OWNER_ID && authorId !== SERVER_OWNER && !WHITELIST.includes(authorId)) {
+    // Cooldown for non-owner
+    if (![OWNER_ID, SERVER_OWNER].includes(authorId) && !WHITELIST.includes(authorId)) {
       const last = cooldowns.get(authorId) || 0;
       const now = Date.now();
       if (now - last < COOLDOWN_MS) {
@@ -39,76 +41,68 @@ module.exports = {
 
     await fs.mkdir(dataDir, { recursive: true });
     const progressData = JSON.parse(await fs.readFile(progressFile, 'utf-8').catch(() => '{}'));
-    const embedConfig = JSON.parse(await fs.readFile(embedConfigFile, 'utf-8').catch(() => '{}'));
 
-    // -------------------------
-    // Resolve multiple targets
-    // -------------------------
-    const targets = [];
-    const resolvedRoles = [];
-    const mentionArgs = args[0].split(','); // comma separated multiple targets
+    const usersToDM = [];
+    const rolesToPing = [];
 
-    for (const argRaw of mentionArgs) {
-      const arg = argRaw.trim();
+    const targetInput = args[0];
 
-      // Role mention <@&ID>
-      const roleMentionMatch = arg.match(/^<@&(\d+)>$/);
-      if (roleMentionMatch) {
-        const role = message.guild.roles.cache.get(roleMentionMatch[1]);
-        if (role) {
-          resolvedRoles.push(role);
-          targets.push(...role.members.map(m => m.user));
-          continue;
-        }
+    // Resolve mentions
+    const userMention = targetInput.match(/<@!?(\d+)>/);
+    const roleMention = targetInput.match(/<@&(\d+)>/);
+
+    if (userMention) {
+      const user = await client.users.fetch(userMention[1]).catch(() => null);
+      if (user) usersToDM.push(user);
+    } else if (roleMention) {
+      const role = message.guild.roles.cache.get(roleMention[1]);
+      if (role) rolesToPing.push(role);
+    } else if (!isNaN(targetInput)) {
+      // numeric ID
+      const user = await client.users.fetch(targetInput).catch(() => null);
+      if (user) usersToDM.push(user);
+      else {
+        const role = message.guild.roles.cache.get(targetInput);
+        if (role) rolesToPing.push(role);
       }
-
-      // User mention <@ID> or <@!ID>
-      const userMentionMatch = arg.match(/^<@!?(\d+)>$/);
-      if (userMentionMatch) {
-        try { targets.push(await client.users.fetch(userMentionMatch[1])); continue; } catch {}
+    } else {
+      // try role by name first
+      const role = message.guild.roles.cache.find(r => r.name.toLowerCase() === targetInput.toLowerCase());
+      if (role) rolesToPing.push(role);
+      else {
+        // username/nickname search
+        const member = message.guild.members.cache.find(
+          m =>
+            m.user.username.toLowerCase() === targetInput.toLowerCase() ||
+            (m.nickname && m.nickname.toLowerCase() === targetInput.toLowerCase())
+        );
+        if (member) usersToDM.push(member.user);
       }
-
-      // Numeric ID
-      if (!isNaN(arg)) {
-        try { targets.push(await client.users.fetch(arg)); continue; } catch {
-          const role = message.guild.roles.cache.get(arg);
-          if (role) { resolvedRoles.push(role); targets.push(...role.members.map(m => m.user)); continue; }
-        }
-      }
-
-      // Role by name
-      const role = message.guild.roles.cache.find(r => r.name.toLowerCase() === arg.toLowerCase());
-      if (role) { resolvedRoles.push(role); targets.push(...role.members.map(m => m.user)); continue; }
-
-      // Username / nickname
-      const member = message.guild.members.cache.find(
-        m => m.user.username.toLowerCase() === arg.toLowerCase() ||
-             (m.nickname && m.nickname.toLowerCase() === arg.toLowerCase())
-      );
-      if (member) targets.push(member.user);
     }
 
-    // Remove duplicates
-    const uniqueTargets = [...new Map(targets.map(u => [u.id, u])).values()];
-    if (!uniqueTargets.length) return message.channel.send('❌ No valid users or roles found.');
+    if (!usersToDM.length && !rolesToPing.length)
+      return message.channel.send('❌ No valid users or roles found.');
 
     const key = `${message.guild.id}_${authorId}_${isEmbed ? 'embed' : 'text'}`;
     const sentList = progressData[key] || [];
-    const finalTargets = uniqueTargets.filter(u => !sentList.includes(u.id));
-    if (!finalTargets.length) return message.channel.send('✅ All users have already received this DM.');
+    const filteredUsers = usersToDM.filter(u => !sentList.includes(u.id));
 
-    // Confirmation embed
+    if (!filteredUsers.length && !rolesToPing.length)
+      return message.channel.send('✅ All users have already received this DM.');
+
+    // Confirmation panel
+    const targetFieldValue = [
+      ...rolesToPing.map(r => `Role: <@&${r.id}>`),
+      ...filteredUsers.slice(0, 10).map(u => `User: <@${u.id}>`)
+    ].join('\n');
+    if (filteredUsers.length > 10) targetFieldValue += `\n...and ${filteredUsers.length - 10} more users`;
+
     const confirmEmbed = new EmbedBuilder()
       .setTitle('📨 DM Confirmation')
       .setColor('#3498db')
-      .setDescription(`You are about to DM **${finalTargets.length} user(s)**`)
-      .addFields(
-        { name: 'Targets', value: [
-            ...resolvedRoles.map(r => `Role: <@&${r.id}> (${r.members.size} members)`),
-            ...finalTargets.slice(0, 10).map(u => `User: <@${u.id}>`)
-          ].join('\n') + (finalTargets.length > 10 ? `\n...and ${finalTargets.length-10} more users` : ''), inline: false },
-        { name: 'Message Preview', value: text.length > 1024 ? text.slice(0,1020)+'...' : text }
-      )
+      .setDescription(`You are about to send a DM to:`)
+      .addFields({ name: 'Targets', value: targetFieldValue })
+      .addFields({ name: 'Message', value: text.length > 1024 ? text.slice(0, 1020) + '...' : text })
       .setFooter({ text: `Requested by ${message.author.tag}` })
       .setTimestamp();
 
@@ -118,6 +112,7 @@ module.exports = {
     );
 
     const panel = await message.channel.send({ embeds: [confirmEmbed], components: [row] });
+
     const collector = panel.createMessageComponentCollector({ time: 30000 });
 
     collector.on('collect', async i => {
@@ -126,30 +121,38 @@ module.exports = {
 
       if (i.customId === 'dm_confirm') {
         cooldowns.set(authorId, Date.now());
-        await sendDMs(finalTargets, text, isEmbed, message, client, key, progressData, embedConfig, resolvedRoles);
-        await panel.edit({ embeds: [EmbedBuilder.from(confirmEmbed).setColor('#2ecc71').setDescription('✅ DMs sending started!')], components: [] });
+        await sendDMs(filteredUsers, text, isEmbed, message, client, key, progressData, rolesToPing);
+        await panel.edit({
+          embeds: [EmbedBuilder.from(confirmEmbed).setColor('#2ecc71').setDescription('✅ DM sending started!')],
+          components: []
+        });
         collector.stop();
       }
 
       if (i.customId === 'dm_cancel') {
-        await panel.edit({ embeds: [EmbedBuilder.from(confirmEmbed).setColor('#e74c3c').setDescription('❌ DM cancelled.')], components: [] });
+        await panel.edit({
+          embeds: [EmbedBuilder.from(confirmEmbed).setColor('#e74c3c').setDescription('❌ DM cancelled.')],
+          components: []
+        });
         collector.stop();
       }
     });
 
     collector.on('end', collected => {
       if (!collected.size) {
-        panel.edit({ embeds: [EmbedBuilder.from(confirmEmbed).setColor('#95a5a6').setDescription('⏱ Confirmation timed out.')], components: [] }).catch(() => {});
+        panel.edit({
+          embeds: [EmbedBuilder.from(confirmEmbed).setColor('#95a5a6').setDescription('⏱ Confirmation timed out.')],
+          components: []
+        }).catch(() => {});
       }
     });
   }
 };
 
-// DM sender with batch, embed customization, and DM_LOG_CHANNEL
-async function sendDMs(targets, text, isEmbed, message, client, key, progressData, embedConfig, resolvedRoles) {
+async function sendDMs(users, text, isEmbed, message, client, key, progressData, rolesToPing) {
   const progressEmbed = new EmbedBuilder()
     .setTitle('📨 Sending DMs...')
-    .setDescription(`0 / ${targets.length} sent`)
+    .setDescription(`0 / ${users.length} sent\nRoles pinged: ${rolesToPing.map(r => `<@&${r.id}>`).join(', ') || 'None'}`)
     .setColor('#3498db')
     .setFooter({ text: `Initiated by ${message.author.tag}` })
     .setTimestamp();
@@ -160,7 +163,10 @@ async function sendDMs(targets, text, isEmbed, message, client, key, progressDat
 
   const progressMessage = await message.channel.send({ embeds: [progressEmbed], components: [cancelButton] });
 
-  let sent = 0, failed = 0, stopped = false;
+  let sent = 0,
+    failed = 0,
+    stopped = false;
+
   const collector = progressMessage.createMessageComponentCollector({ time: 0 });
   collector.on('collect', async i => {
     if (i.user.id !== message.author.id) return i.reply({ content: 'Only the command executor can stop this.', ephemeral: true });
@@ -168,44 +174,37 @@ async function sendDMs(targets, text, isEmbed, message, client, key, progressDat
     await i.deferUpdate();
   });
 
-  const batchSize = 5;
-  for (let i = 0; i < targets.length; i += batchSize) {
+  for (let i = 0; i < users.length; i += BATCH_SIZE) {
     if (stopped) break;
-    const batch = targets.slice(i, i + batchSize);
-    await Promise.all(batch.map(async user => {
-      try {
-        let dmEmbed = null;
-        if (isEmbed) {
-          let color = '#3498db', title = '📩 Message from Staff', footer = `Sent by ${message.author.tag}`;
-          for (const role of resolvedRoles) {
-            if (embedConfig[role.id]) {
-              const cfg = embedConfig[role.id];
-              color = cfg.color || color;
-              title = cfg.title || title;
-              footer = cfg.footer || footer;
-              break; // use first matching role
-            }
+    const batch = users.slice(i, i + BATCH_SIZE);
+    await Promise.all(
+      batch.map(async user => {
+        try {
+          if (isEmbed) {
+            const dmEmbed = new EmbedBuilder()
+              .setColor('#3498db')
+              .setTitle('📩 Message from Staff')
+              .setDescription(text)
+              .setFooter({ text: `Sent by ${message.author.tag}` })
+              .setTimestamp();
+            await user.send({ embeds: [dmEmbed] });
+          } else {
+            await user.send(text);
           }
-          dmEmbed = new EmbedBuilder().setColor(color).setTitle(title).setDescription(text).setFooter({ text: footer }).setTimestamp();
-          await user.send({ embeds: [dmEmbed] });
-        } else {
-          await user.send(text);
+          sent++;
+          progressData[key] = progressData[key] || [];
+          progressData[key].push(user.id);
+        } catch {
+          failed++;
         }
-        sent++;
-        progressData[key] = progressData[key] || [];
-        progressData[key].push(user.id);
-      } catch {
-        failed++;
-      }
-    }));
+      })
+    );
 
-    await fs.writeFile(progressFile, JSON.stringify(progressData, null, 4));
-
+    // Update progress
     const barLength = 20;
-    const progress = Math.floor((sent / targets.length) * barLength);
-    const bar = '█'.repeat(progress) + '—'.repeat(barLength - progress);
+    const bar = '█'.repeat(Math.floor((sent / users.length) * barLength)) + '—'.repeat(barLength - Math.floor((sent / users.length) * barLength));
     const updatedEmbed = EmbedBuilder.from(progressEmbed)
-      .setDescription(`Progress: [${bar}]\n✅ Sent: ${sent}\n❌ Failed: ${failed}\n📨 Total: ${targets.length}`);
+      .setDescription(`Progress: [${bar}]\n✅ Sent: ${sent}\n❌ Failed: ${failed}\n📨 Total: ${users.length}\nRoles pinged: ${rolesToPing.map(r => `<@&${r.id}>`).join(', ') || 'None'}`);
     await progressMessage.edit({ embeds: [updatedEmbed] });
 
     await new Promise(res => setTimeout(res, 500)); // smooth sending
@@ -214,33 +213,21 @@ async function sendDMs(targets, text, isEmbed, message, client, key, progressDat
   const finalEmbed = EmbedBuilder.from(progressEmbed)
     .setTitle(stopped ? '🛑 DM Sending Stopped' : '📬 DM Sending Complete')
     .setColor(stopped ? '#e74c3c' : '#2ecc71')
-    .setDescription(`✅ Sent: ${sent}\n❌ Failed: ${failed}\n📨 Total: ${targets.length}`);
+    .setDescription(`✅ Sent: ${sent}\n❌ Failed: ${failed}\n📨 Total: ${users.length}\nRoles pinged: ${rolesToPing.map(r => `<@&${r.id}>`).join(', ') || 'None'}`);
   await progressMessage.edit({ embeds: [finalEmbed], components: [] });
 
-  // DM log
-  try {
-    if (DM_LOG_CHANNEL) {
-      const logChannel = await message.guild.channels.fetch(DM_LOG_CHANNEL).catch(() => null);
-      if (logChannel) {
-        const logEmbed = new EmbedBuilder()
-          .setTitle('📌 DM Log')
-          .setColor('#9b59b6')
-          .addFields(
-            { name: 'Sent By', value: `<@${message.author.id}>`, inline: true },
-            { name: 'Targets', value: [
-                ...resolvedRoles.map(r => `Role: <@&${r.id}> (${r.members.size} members)`),
-                ...targets.slice(0, 10).map(u => `User: <@${u.id}>`)
-              ].join('\n') + (targets.length > 10 ? `\n...and ${targets.length-10} more users` : ''), inline: true },
-            { name: 'Message', value: text.length > 1024 ? text.slice(0,1020)+'...' : text, inline: false }
-          )
-          .setTimestamp();
-        await logChannel.send({ embeds: [logEmbed] });
-      }
-    }
-  } catch (err) { console.error('DM log failed', err); }
-
-  if (!stopped) {
-    delete progressData[key];
-    await fs.writeFile(progressFile, JSON.stringify(progressData, null, 4));
+  // Log to DM_LOG_CHANNEL
+  const logChannel = message.guild.channels.cache.get(DM_LOG_CHANNEL);
+  if (logChannel) {
+    const logEmbed = new EmbedBuilder()
+      .setTitle('📩 DM Log')
+      .setColor('#3498db')
+      .setDescription(`Sent by: <@${message.author.id}>\nRoles pinged: ${rolesToPing.map(r => `<@&${r.id}>`).join(', ') || 'None'}\nUsers DM'ed: ${users.length}`)
+      .addFields({ name: 'Message', value: text.length > 1024 ? text.slice(0, 1020) + '...' : text })
+      .setTimestamp();
+    await logChannel.send({ embeds: [logEmbed] }).catch(() => {});
   }
+
+  delete progressData[key];
+  await fs.writeFile(progressFile, JSON.stringify(progressData, null, 4));
 }
