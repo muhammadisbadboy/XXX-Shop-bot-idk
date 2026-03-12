@@ -16,7 +16,6 @@ module.exports = {
             .setTitle('📜 Middleman Info')
             .setDescription('**A Middleman (MM)** is a trusted staff member who ensures trades are safe and fair.')
             .setColor('#8000FF') // Purple embed
-            .setThumbnail('https://media.discordapp.net/attachments/1480184670606983240/1481663299371143199/image.webp?ex=69b421fa&is=69b2d07a&hm=0bf433885965e340bedff048f5f2fddca8bea6693334708a0232bc1b38d2bb50&=&format=webp')
             .addFields(
                 {
                     name: '📌 MM Rules',
@@ -27,6 +26,7 @@ module.exports = {
                     value: '1️⃣ **Seller** gives item(s) to the MM.\n2️⃣ **Buyer** sends payment/item(s) to seller.\n3️⃣ **MM** confirms both sides and delivers the items to the buyer.'
                 }
             )
+            .setImage('https://media.discordapp.net/attachments/1480184670606983240/1481663299371143199/image.webp?ex=69b421fa&is=69b2d07a&hm=0bf433885965e340bedff048f5f2fddca8bea6693334708a0232bc1b38d2bb50&=&format=webp')
             .setFooter({ text: 'Middleman Trade Guide • Only for authorized MMs' })
             .setTimestamp();
 
