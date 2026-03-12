@@ -1,7 +1,7 @@
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js');
 
 module.exports = {
-    name: 'galalo',
+    name: 'gazali',
     description: 'Dynamic offer panel command',
     async execute(message, args, client) {
 
