@@ -33,7 +33,7 @@ module.exports = {
                 },
                 {
                     name: '📈 Trading',
-                    value: '`log`, `mmlist`, `settrust`, `status`, `vouch`, `vouches`'
+                    value: '`log`, `mmlist`, `status`, `vouch`, `vouches`'
                 }
             )
             .setFooter({ text: 'all the cmds here mud' })
