@@ -80,7 +80,7 @@ Describe the split.
 
 Example:
 \`70/30\`
-\`host keeps all\`
+\`Hitter keeps all\`
 \`50/50\`
 
 **Attachments**
