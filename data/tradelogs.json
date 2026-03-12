@@ -1,0 +1,14 @@
+{
+ "traders": {
+  "userid": {
+   "totalProfit": 5200,
+   "traderShare": 3640,
+   "hostShare": 1560,
+   "trades": 7
+  }
+ },
+ "global": {
+  "totalProfit": 12000,
+  "totalTrades": 15
+ }
+}
