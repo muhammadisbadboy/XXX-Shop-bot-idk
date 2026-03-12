@@ -49,21 +49,21 @@ module.exports = {
         if (!args.length) {
 
             const guide = new EmbedBuilder()
-                .setTitle('📊 Trade Log Command Guide')
+                .setTitle('Hit Log Command')
                 .setColor('#2b2d31')
                 .setDescription(`
 **Usage**
-\`$log <h1t> <h1tter> <profit> <split>\`
+\`$log <hit> <hitter> <profit> <split>\`
 
 **Example**
-\`$log Flip @Trader 1200 70/30\`
+\`$log 5 dragons @alexx_gng 120$ Gave him 2 dragons\`
 
 **Arguments**
 
-**h1t**
-Name/type of the hit (free text).
+**hit**
+Describe the hit.
 
-**h1tter**
+**hitter**
 Mention the user performing the hit.
 
 **Profit**
@@ -76,7 +76,7 @@ Examples:
 \`1.2k\`
 
 **Split**
-Any text describing the split.
+Describe the split.
 
 Example:
 \`70/30\`
@@ -93,7 +93,7 @@ You can attach screenshots or proof when sending the command.
         const trader = message.mentions.users.first();
 
         if (!trader) {
-            return message.reply('❌ You must mention the h1tter.');
+            return message.reply('❌ You must mention the hitter.');
         }
 
         const traderIndex = args.findIndex(arg => arg.includes(`<@${trader.id}>`) || arg.includes(`<@!${trader.id}>`));
@@ -136,12 +136,12 @@ You can attach screenshots or proof when sending the command.
             .setTitle('💰 Hit Logged')
             .setColor('#2b2d31')
             .addFields(
-                { name: 'H1t', value: h1t, inline: true },
-                { name: 'H1tter', value: `<@${trader.id}>`, inline: true },
+                { name: 'Hit', value: h1t, inline: true },
+                { name: 'Hitter', value: `<@${trader.id}>`, inline: true },
                 { name: 'Logged By', value: `<@${message.author.id}>`, inline: true },
                 { name: 'Profit', value: `$${profit.toLocaleString()}`, inline: true },
                 { name: 'Split', value: splitArg, inline: true },
-                { name: 'Total Trades', value: `${data.traders[trader.id].trades}`, inline: true },
+                { name: 'Total Hits', value: `${data.traders[trader.id].trades}`, inline: true },
                 { name: 'Total Profit', value: `$${data.traders[trader.id].totalProfit.toLocaleString()}`, inline: true }
             )
             .setTimestamp();
