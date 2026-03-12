@@ -34,7 +34,7 @@ module.exports = {
         const embed = new EmbedBuilder()
             .setTitle('🛡 Middleman Trade Procedure')
             .setDescription(procedureText)
-            .setColor('#5865F2') // Professional Discord blurple
+            .setColor('#8000FF') // Purple color
             .setFooter({ text: 'Middleman Trade Guide' })
             .setTimestamp();
 
