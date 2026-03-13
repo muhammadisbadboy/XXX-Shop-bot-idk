@@ -26,12 +26,6 @@ const client = new Client({
 });
 
 // -------------------------
-// Guards
-// -------------------------
-require("./guards/roleBackup")(client);
-require("./guards/antiRoleNuke")(client);
-
-// -------------------------
 // Stick Command
 // -------------------------
 const stickCmd = require('./commands/moderation/stick');
