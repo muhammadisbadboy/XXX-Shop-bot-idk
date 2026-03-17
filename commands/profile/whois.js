@@ -1,12 +1,13 @@
-const { EmbedBuilder, userFlags } = require('discord.js');
+const { EmbedBuilder } = require('discord.js');
 
 module.exports = {
   name: 'whois',
-  description: 'Shows a professional Dyno-style user profile panel.',
+  aliases: ['profile', 'userinfo', 'ui'],
+  description: 'Shows a professional Dyno-style profile panel.',
   usage: '.whois [@user|userID]',
   async execute(message, args) {
     try {
-      // Fetch member by mention or ID
+      // Fetch member
       let member;
       if (args[0]) {
         member = await message.guild.members.fetch(args[0]).catch(() => null);
@@ -16,23 +17,33 @@ module.exports = {
       const user = member.user;
       const isBot = user.bot;
 
-      // Fetch flags (badges)
-      const flags = (await user.fetchFlags())?.toArray() || [];
-
-      // Status with emoji
+      // Status mapping with emoji
       const statusMap = {
         online: '🟢 Online',
         idle: '🌙 Idle',
-        dnd: '⛔ Do Not Disturb',
+        dnd: '⛔ DND',
         offline: '⚫ Offline',
       };
-      const status = member.presence?.status ? statusMap[member.presence.status] : '⚫ Offline';
+      const presenceStatus = member.presence?.status || 'offline';
+      const status = statusMap[presenceStatus];
 
-      // Roles excluding @everyone
+      // Embed color by status
+      const colorMap = {
+        online: '#43B581',
+        idle: '#FAA61A',
+        dnd: '#F04747',
+        offline: '#747F8D',
+      };
+      const embedColor = colorMap[presenceStatus] || 'Random';
+
+      // Roles
       const roles = member.roles.cache.filter(r => r.id !== message.guild.id).map(r => r.toString()).join(', ') || 'None';
 
+      // Badges / flags
+      const flags = (await user.fetchFlags())?.toArray() || [];
+
       const embed = new EmbedBuilder()
-        .setColor('Random')
+        .setColor(embedColor)
         .setAuthor({ name: `${user.tag} ${isBot ? '🤖' : ''}`, iconURL: user.displayAvatarURL({ dynamic: true }) })
         .setThumbnail(user.displayAvatarURL({ dynamic: true, size: 512 }))
         .addFields(
@@ -44,7 +55,7 @@ module.exports = {
           { name: '📅 Account Created', value: `<t:${Math.floor(user.createdTimestamp / 1000)}:R>`, inline: true },
           { name: '💠 Badges', value: flags.length ? flags.join(', ') : 'None', inline: true },
           { name: '👥 Roles', value: roles, inline: false },
-          ...(isBot ? [{ name: '🤖 Bot Info', value: 'This user is a bot account with no further personal info.' }] : [])
+          ...(isBot ? [{ name: '🤖 Bot Info', value: 'This user is a bot account.' }] : [])
         )
         .setFooter({ text: `Requested by ${message.author.tag}`, iconURL: message.author.displayAvatarURL({ dynamic: true }) })
         .setTimestamp();

@@ -1,12 +1,13 @@
 const { EmbedBuilder } = require('discord.js');
 
 module.exports = {
-  name: 'av',
-  description: 'Displays a user\'s avatar in a professional panel.',
+  name: 'avatar',
+  aliases: ['av', 'pfp', 'icon'],
+  description: 'Shows a professional avatar panel for a user.',
   usage: '.av [@user|userID]',
   async execute(message, args) {
     try {
-      // Fetch user from mention or ID, default to author
+      // Fetch user by mention or ID
       let user;
       if (args[0]) {
         user = await message.guild.members.fetch(args[0]).catch(() => null);
@@ -14,21 +15,33 @@ module.exports = {
       }
       if (!user) user = message.mentions.users.first() || message.author;
 
+      const member = message.guild.members.cache.get(user.id);
       const isBot = user.bot;
+      const presenceStatus = member?.presence?.status || 'offline';
+
+      // Status color mapping
+      const statusColor = {
+        online: '#43B581',
+        idle: '#FAA61A',
+        dnd: '#F04747',
+        offline: '#747F8D',
+      };
+
+      // Fetch flags (badges)
+      const flags = (await user.fetchFlags())?.toArray() || [];
 
       const embed = new EmbedBuilder()
-        .setColor('Random')
-        .setTitle(`${user.tag} ${isBot ? '🤖' : ''}`)
+        .setColor(statusColor[presenceStatus] || 'Random')
+        .setAuthor({ name: `${user.tag} ${isBot ? '🤖' : ''}`, iconURL: user.displayAvatarURL({ dynamic: true }) })
         .setThumbnail(user.displayAvatarURL({ dynamic: true, size: 512 }))
         .setImage(user.displayAvatarURL({ dynamic: true, size: 1024 }))
         .addFields(
-          { name: '🆔 User ID', value: user.id, inline: true },
+          { name: '🆔 ID', value: user.id, inline: true },
           { name: '👤 Username', value: user.username, inline: true },
-          { name: '📛 Nickname', value: message.guild.members.cache.get(user.id)?.nickname || 'None', inline: true },
-          { name: '🟢 Status', value: message.guild.members.cache.get(user.id)?.presence?.status || 'Offline', inline: true },
-          { name: '🎉 Account Created', value: `<t:${Math.floor(user.createdTimestamp / 1000)}:R>`, inline: true },
-          { name: '💠 Badges', value: user.flags?.toArray().join(', ') || 'None', inline: true },
-          ...(isBot ? [{ name: '🤖 Bot Info', value: 'This user is a bot account.' }] : [])
+          { name: '📛 Nickname', value: member?.nickname || 'None', inline: true },
+          { name: '🟢 Status', value: presenceStatus, inline: true },
+          { name: '💠 Badges', value: flags.length ? flags.join(', ') : 'None', inline: true },
+          ...(isBot ? [{ name: '🤖 Bot Info', value: 'This is a bot account.' }] : [])
         )
         .setFooter({ text: `Requested by ${message.author.tag}`, iconURL: message.author.displayAvatarURL({ dynamic: true }) })
         .setTimestamp();
