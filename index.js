@@ -121,16 +121,27 @@ if (fs.existsSync(slashDir)) {
 }
 
 // -------------------------
-// Organized Command Logging
+// Display Commands in Columns
 // -------------------------
-console.log('==============================');
-console.log(`✅ Prefix Commands Loaded (${loadedPrefixCommands.length}):`);
-loadedPrefixCommands.forEach(cmd => console.log(`  • ${cmd}`));
+function displayCommands(title, commands) {
+  const colWidth = 25;
+  console.log('==============================');
+  console.log(`✅ ${title} Loaded (${commands.length}):`);
 
-console.log('------------------------------');
-console.log(`✅ Slash Commands Loaded (${loadedSlashCommands.length}):`);
-loadedSlashCommands.forEach(cmd => console.log(`  • ${cmd}`));
-console.log('==============================');
+  for (let i = 0; i < commands.length; i += 3) {
+    const row = [
+      commands[i] || '',
+      commands[i + 1] || '',
+      commands[i + 2] || ''
+    ].map(cmd => cmd.padEnd(colWidth)).join('');
+    console.log(row);
+  }
+
+  console.log('==============================\n');
+}
+
+displayCommands('Prefix Commands', loadedPrefixCommands);
+displayCommands('Slash Commands', loadedSlashCommands);
 
 // -------------------------
 // Register Slash Commands (Guild)
@@ -175,8 +186,14 @@ if (fs.existsSync(eventPath)) {
 // -------------------------
 // Handle Prefix Commands
 // -------------------------
+const processedMessages = new Set();
+
 client.on(Events.MessageCreate, async (message) => {
   if (!message.guild || message.author.bot) return;
+
+  // Prevent processing the same message twice
+  if (processedMessages.has(message.id)) return;
+  processedMessages.add(message.id);
 
   if (stickCmd?.stickyListener) stickCmd.stickyListener(message);
 
