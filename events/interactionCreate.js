@@ -25,29 +25,32 @@ module.exports = {
     const allowedUsers = [process.env.OWNER_ID, process.env.SERVER_OWNER];
 
     // ===============================
-    // SAFE HELPERS
+    // SAFE REPLY SYSTEM
     // ===============================
-    async function safeReply(msg) {
+    const reply = async (data, ephemeral = false) => {
       try {
-        if (interaction.replied) return;
-        if (interaction.deferred) return interaction.editReply(msg);
-        return interaction.reply(msg);
+        if (interaction.replied || interaction.deferred) {
+          return interaction.followUp({ ...data, ephemeral });
+        }
+        return interaction.reply({ ...data, ephemeral });
       } catch {}
-    }
+    };
 
-    async function safeDefer(ephemeral = true) {
+    const defer = async (ephemeral = false) => {
       try {
-        if (!interaction.replied && !interaction.deferred) {
+        if (!interaction.deferred && !interaction.replied) {
           await interaction.deferReply({ ephemeral });
         }
       } catch {}
-    }
+    };
 
-    async function safeEdit(msg) {
+    const edit = async (data) => {
       try {
-        if (interaction.deferred) return interaction.editReply(msg);
+        if (interaction.deferred) {
+          return interaction.editReply(data);
+        }
       } catch {}
-    }
+    };
 
     // ===============================
     // SLASH COMMANDS
@@ -57,24 +60,30 @@ module.exports = {
       if (!command) return;
 
       try {
-        // defer immediately to prevent "thinking..." timeout
-        if (!interaction.deferred && !interaction.replied) await interaction.deferReply({ ephemeral: false });
+        await defer(false);
         await command.execute(interaction, client);
       } catch (err) {
-        console.error(`Error executing slash command ${interaction.commandName}:`, err);
-        if (!interaction.replied)
-          await interaction.reply({ content: "❌ Something went wrong.", ephemeral: true });
+        console.error(`Slash Error: ${interaction.commandName}`, err);
+        return reply({ content: "❌ Command failed." }, true);
       }
       return;
     }
 
     // ===============================
-    // BUTTON HANDLER
+    // BUTTONS
     // ===============================
     if (interaction.isButton()) {
-      await safeDefer(false); // defer immediately
       const id = interaction.customId;
-      const userData = await eco.getUser(interaction.user.id);
+
+      await defer(false);
+
+      let userData;
+      try {
+        userData = await eco.getUser(interaction.user.id);
+      } catch {
+        userData = { money: 0, lastWork: 0, lastDaily: 0 };
+      }
+
       const now = Date.now();
 
       // ---------- ECONOMY ----------
@@ -82,127 +91,150 @@ module.exports = {
         // WORK
         if (id === "eco_work") {
           const cooldown = 5 * 60 * 1000;
-          if (now - userData.lastWork < cooldown) {
-            return safeEdit({ content: "⏳ You are tired. Try again later.", components: [] });
+
+          if (now - (userData.lastWork || 0) < cooldown) {
+            return edit({ content: "⏳ Wait before working again.", components: [] });
           }
 
           const amount = Math.floor(Math.random() * 400) + 100;
+
           await eco.addMoney(interaction.user.id, amount);
           await eco.setCooldown(interaction.user.id, "lastWork");
+
           const updated = await eco.getUser(interaction.user.id);
 
           const embed = ui.mainPanel(interaction.user, updated)
-            .setDescription(`💼 **Work Complete**\nYou earned **$${amount}** 💰\nKeep grinding 👇`);
-          return safeEdit({ content: "", embeds: [embed], components: ui.mainButtons() });
+            .setDescription(`💼 You earned **$${amount}**`);
+
+          return edit({ embeds: [embed], components: ui.mainButtons() });
         }
 
         // DAILY
         if (id === "eco_daily") {
-          const cooldown = 24 * 60 * 60 * 1000;
-          if (now - userData.lastDaily < cooldown) {
-            return safeEdit({ content: "⏳ Already claimed daily.", components: [] });
+          const cooldown = 86400000;
+
+          if (now - (userData.lastDaily || 0) < cooldown) {
+            return edit({ content: "⏳ Already claimed.", components: [] });
           }
 
-          const amount = 1000;
-          await eco.addMoney(interaction.user.id, amount);
+          await eco.addMoney(interaction.user.id, 1000);
           await eco.setCooldown(interaction.user.id, "lastDaily");
+
           const updated = await eco.getUser(interaction.user.id);
 
           const embed = ui.mainPanel(interaction.user, updated)
-            .setDescription(`🎁 **Daily Reward**\nYou claimed **$${amount}** 💰`);
-          return safeEdit({ content: "", embeds: [embed], components: ui.mainButtons() });
+            .setDescription(`🎁 You got **$1000**`);
+
+          return edit({ embeds: [embed], components: ui.mainButtons() });
         }
       }
 
-      // ---------- ROLE BACKUP / RESTORE ----------
-      if (id.startsWith("restore_roles_") || id.startsWith("ignore_restore_")) {
+      // ---------- ROLE RESTORE ----------
+      if (id.startsWith("restore_roles_")) {
         if (!allowedUsers.includes(interaction.user.id)) {
-          return safeReply({ content: "❌ Not allowed.", ephemeral: true });
+          return reply({ content: "❌ Not allowed." }, true);
         }
 
-        if (id.startsWith("restore_roles_")) {
-          const guildID = id.split("_")[2];
-          const backupFile = `./backups/${guildID}_roles.json`;
+        const guildID = id.split("_")[2];
+        const file = `./backups/${guildID}_roles.json`;
 
-          if (!fs.existsSync(backupFile)) return safeEdit({ content: "❌ Backup not found." });
+        if (!fs.existsSync(file)) {
+          return edit({ content: "❌ Backup not found." });
+        }
 
-          const backup = JSON.parse(fs.readFileSync(backupFile, "utf8"));
-          const createdRoles = {};
+        const backup = JSON.parse(fs.readFileSync(file, "utf8"));
+        const targetGuild = client.guilds.cache.get(guildID);
 
-          const targetGuild = client.guilds.cache.get(guildID);
-          if (!targetGuild) return safeEdit({ content: "❌ Guild not found." });
+        if (!targetGuild) return edit({ content: "❌ Guild missing." });
 
-          for (const role of backup.roles) {
-            try {
-              const newRole = await targetGuild.roles.create({
-                name: role.name,
-                color: role.color,
-                permissions: BigInt(role.permissions),
-                hoist: role.hoist,
-                mentionable: role.mentionable
-              });
-              createdRoles[role.name] = newRole;
-            } catch {}
-          }
+        const createdRoles = {};
 
-          for (const memberID in backup.members) {
-            const member = await targetGuild.members.fetch(memberID).catch(() => null);
-            if (!member) continue;
-            for (const roleName of backup.members[memberID]) {
-              const role = createdRoles[roleName];
-              if (role) await member.roles.add(role).catch(() => {});
+        for (const role of backup.roles) {
+          try {
+            const r = await targetGuild.roles.create({
+              name: role.name,
+              color: role.color,
+              permissions: BigInt(role.permissions)
+            });
+            createdRoles[role.name] = r;
+          } catch {}
+        }
+
+        for (const id in backup.members) {
+          const member = await targetGuild.members.fetch(id).catch(() => null);
+          if (!member) continue;
+
+          for (const roleName of backup.members[id]) {
+            if (createdRoles[roleName]) {
+              await member.roles.add(createdRoles[roleName]).catch(() => {});
             }
           }
-
-          return safeEdit({ content: `✅ Roles restored in **${guild.name}**` });
         }
 
-        if (id.startsWith("ignore_restore_")) {
-          return safeReply({ content: "Restore ignored.", ephemeral: true });
-        }
+        return edit({ content: "✅ Roles restored." });
       }
 
-      // ---------- TICKET BUTTONS ----------
-      if (interaction.channel?.name.startsWith("ticket-")) {
+      if (id.startsWith("ignore_restore_")) {
+        return reply({ content: "Ignored.", ephemeral: true });
+      }
+
+      // ---------- TICKETS ----------
+      if (interaction.channel?.name?.startsWith("ticket-")) {
         if (!interaction.member.roles.cache.has(claimRoleId)) {
-          return safeReply({ content: "❌ Not authorized.", ephemeral: true });
+          return reply({ content: "❌ No permission." }, true);
         }
 
-        switch (id) {
-          case "ticket-claim":
-            return safeReply({
-              embeds: [new EmbedBuilder().setColor("Green").setTitle("Ticket Claimed").setDescription(`<@${interaction.user.id}> claimed this ticket`)]
-            });
-          case "ticket-unclaim":
-            return safeReply({
-              embeds: [new EmbedBuilder().setColor("Yellow").setTitle("Ticket Unclaimed")]
-            });
-          case "ticket-close":
-            return ticketManager.closeTicket(interaction.channel, guild);
+        if (id === "ticket-claim") {
+          return reply({
+            embeds: [
+              new EmbedBuilder()
+                .setColor("Green")
+                .setTitle("Claimed")
+                .setDescription(`<@${interaction.user.id}> claimed`)
+            ]
+          });
+        }
+
+        if (id === "ticket-unclaim") {
+          return reply({
+            embeds: [
+              new EmbedBuilder()
+                .setColor("Yellow")
+                .setTitle("Unclaimed")
+            ]
+          });
+        }
+
+        if (id === "ticket-close") {
+          return ticketManager.closeTicket(interaction.channel, guild);
         }
       }
     }
 
     // ===============================
-    // STRING SELECT (Ticket Category)
+    // SELECT MENU
     // ===============================
-    if (interaction.isStringSelectMenu() && interaction.customId === "ticketCategorySelect") {
-      await safeDefer(true);
-      const category = interaction.values[0];
-      const modal = new ModalBuilder().setCustomId(`mmForm-${category}`).setTitle(`🎫 ${category} Trade Form`);
+    if (interaction.isStringSelectMenu()) {
+      if (interaction.customId !== "ticketCategorySelect") return;
 
-      const inputs = [
-        ["trader", "Trader Name / Username", TextInputStyle.Short, true],
-        ["trade", "Trade Details", TextInputStyle.Paragraph, true],
-        ["extra", "Extra Info", TextInputStyle.Paragraph, false],
-        ["contact", "Contact Method", TextInputStyle.Short, true]
-      ];
+      const category = interaction.values[0];
+
+      const modal = new ModalBuilder()
+        .setCustomId(`mmForm-${category}`)
+        .setTitle(`🎫 ${category}`);
 
       modal.addComponents(
-        ...inputs.map(([id, label, style, required]) =>
-          new ActionRowBuilder().addComponents(
-            new TextInputBuilder().setCustomId(id).setLabel(label).setStyle(style).setRequired(required)
-          )
+        new ActionRowBuilder().addComponents(
+          new TextInputBuilder().setCustomId("trader").setLabel("Trader").setStyle(TextInputStyle.Short)
+        ),
+        new ActionRowBuilder().addComponents(
+          new TextInputBuilder().setCustomId("trade").setLabel("Trade").setStyle(TextInputStyle.Paragraph)
+        ),
+        new ActionRowBuilder().addComponents(
+          new TextInputBuilder().setCustomId("extra").setLabel("Extra").setStyle(TextInputStyle.Paragraph).setRequired(false)
+        ),
+        new ActionRowBuilder().addComponents(
+          new TextInputBuilder().setCustomId("contact").setLabel("Contact").setStyle(TextInputStyle.Short)
         )
       );
 
@@ -210,69 +242,47 @@ module.exports = {
     }
 
     // ===============================
-    // MODAL SUBMIT (Ticket Create)
+    // MODAL SUBMIT
     // ===============================
-    if (interaction.isModalSubmit() && interaction.customId.startsWith("mmForm-")) {
-      await safeDefer(true);
+    if (interaction.isModalSubmit()) {
+      if (!interaction.customId.startsWith("mmForm-")) return;
+
+      await defer(true);
 
       const category = interaction.customId.split("-")[1];
-      const traderInput = interaction.fields.getTextInputValue("trader");
-      const tradeDetails = interaction.fields.getTextInputValue("trade");
-      const extraInfo = interaction.fields.getTextInputValue("extra") || "None";
-      const contactMethod = interaction.fields.getTextInputValue("contact");
-      const ticketName = `ticket-${interaction.user.username}`.toLowerCase();
 
-      async function resolveMember(guild, input) {
-        if (!input) return null;
-        const mentionMatch = input.match(/<@!?(\d+)>/);
-        if (mentionMatch) return guild.members.fetch(mentionMatch[1]).catch(() => null);
-        if (!isNaN(input)) return guild.members.fetch(input).catch(() => null);
-        const cached = guild.members.cache.find(m =>
-          m.user.username.toLowerCase() === input.toLowerCase() ||
-          (m.nickname && m.nickname.toLowerCase() === input.toLowerCase())
-        );
-        if (cached) return cached;
-        return guild.members.fetch().then(list =>
-          list.find(m =>
-            m.user.username.toLowerCase() === input.toLowerCase() ||
-            (m.nickname && m.nickname.toLowerCase() === input.toLowerCase())
-          )
-        ).catch(() => null);
-      }
+      const trader = interaction.fields.getTextInputValue("trader");
+      const trade = interaction.fields.getTextInputValue("trade");
+      const extra = interaction.fields.getTextInputValue("extra") || "None";
+      const contact = interaction.fields.getTextInputValue("contact");
 
-      const otherUser = await resolveMember(guild, traderInput);
-
-      const ticketChannel = await ticketManager.createTicket(
+      const channel = await ticketManager.createTicket(
         client,
         guild,
-        ticketName,
-        interaction.user.id,
-        otherUser ? otherUser.id : null
+        `ticket-${interaction.user.username}`,
+        interaction.user.id
       );
 
       const embed = new EmbedBuilder()
-        .setTitle(`🎫 ${category} Ticket`)
-        .setDescription(`Welcome <@${interaction.user.id}>!\nStaff: <@&${claimRoleId}>`)
+        .setTitle(`🎫 ${category}`)
+        .setDescription(`User: <@${interaction.user.id}>`)
         .addFields({
-          name: "📌 Trade Info",
-          value: `Trader: ${traderInput}\nDetails: ${tradeDetails}\nExtra: ${extraInfo}\nContact: ${contactMethod}`
+          name: "Info",
+          value: `Trader: ${trader}\nTrade: ${trade}\nExtra: ${extra}\nContact: ${contact}`
         })
-        .setColor("#1F2937")
-        .setTimestamp();
+        .setColor("#1F2937");
 
       const buttons = new ActionRowBuilder().addComponents(
         new ButtonBuilder().setCustomId("ticket-claim").setLabel("Claim").setStyle(ButtonStyle.Success),
-        new ButtonBuilder().setCustomId("ticket-unclaim").setLabel("Unclaim").setStyle(ButtonStyle.Secondary),
         new ButtonBuilder().setCustomId("ticket-close").setLabel("Close").setStyle(ButtonStyle.Danger)
       );
 
-      await ticketChannel.send({
-        content: `<@&${claimRoleId}> <@${interaction.user.id}>`,
+      await channel.send({
         embeds: [embed],
         components: [buttons]
       });
 
-      return safeEdit({ content: `✅ Ticket created: <#${ticketChannel.id}>` });
+      return edit({ content: `✅ Created: <#${channel.id}>` });
     }
   }
 };
