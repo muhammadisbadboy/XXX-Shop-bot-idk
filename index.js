@@ -132,4 +132,4 @@ client.once(Events.ClientReady, async () => {
 // -------------------------
 // Login
 // -------------------------
-client.login(process.env.TOKEN).catch(err => console.error('Failed to login:', err));l
+client.login(process.env.TOKEN).catch(err => console.error('Failed to login:', err));
