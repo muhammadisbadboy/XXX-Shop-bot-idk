@@ -98,51 +98,61 @@ function loadPrefixCommands(dir) {
 }
 
 const loadedPrefixCommands = loadPrefixCommands(path.join(__dirname, 'commands'));
-console.log(`✅ Prefix commands loaded (${loadedPrefixCommands.length}):`);
-console.log('  • ' + loadedPrefixCommands.join('\n  • '));
 
 // -------------------------
 // Load Slash Commands
 // -------------------------
 const slashDir = path.join(__dirname, 'slashCommands');
+let loadedSlashCommands = [];
+let slashCommandsArray = [];
+
 if (fs.existsSync(slashDir)) {
-  const loadedSlashCommands = [];
-  const commandsArray = [];
+  loadedSlashCommands = [];
+  slashCommandsArray = [];
 
   for (const file of fs.readdirSync(slashDir).filter(f => f.endsWith('.js'))) {
     const command = require(path.join(slashDir, file));
     if (command?.data && typeof command.execute === 'function') {
       client.slashCommands.set(command.data.name, command);
-      commandsArray.push(command.data.toJSON());
+      slashCommandsArray.push(command.data.toJSON());
       loadedSlashCommands.push(command.data.name);
     }
   }
+}
 
-  console.log(`✅ Slash commands loaded (${loadedSlashCommands.length}):`);
-  console.log('  • ' + loadedSlashCommands.join('\n  • '));
+// -------------------------
+// Organized Command Logging
+// -------------------------
+console.log('==============================');
+console.log(`✅ Prefix Commands Loaded (${loadedPrefixCommands.length}):`);
+loadedPrefixCommands.forEach(cmd => console.log(`  • ${cmd}`));
 
-  // -------------------------
-  // Register Slash Commands (Guild)
-  // -------------------------
-  if (process.env.CLIENT_ID && process.env.GUILD_ID) {
-    const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
+console.log('------------------------------');
+console.log(`✅ Slash Commands Loaded (${loadedSlashCommands.length}):`);
+loadedSlashCommands.forEach(cmd => console.log(`  • ${cmd}`));
+console.log('==============================');
 
-    (async () => {
-      console.log(`🔹 Starting slash command registration for ${commandsArray.length} command(s)...`);
-      const startTime = Date.now();
+// -------------------------
+// Register Slash Commands (Guild)
+// -------------------------
+if (process.env.CLIENT_ID && process.env.GUILD_ID && slashCommandsArray.length > 0) {
+  const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
 
-      try {
-        await rest.put(
-          Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID),
-          { body: commandsArray }
-        );
-        const totalTime = Date.now() - startTime;
-        console.log(`🚀 Successfully registered ${commandsArray.length} slash commands in ${totalTime}ms`);
-      } catch (err) {
-        console.error('❌ Failed to register slash commands:', err);
-      }
-    })();
-  }
+  (async () => {
+    console.log(`🔹 Registering ${slashCommandsArray.length} slash command(s)...`);
+    const startTime = Date.now();
+
+    try {
+      await rest.put(
+        Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID),
+        { body: slashCommandsArray }
+      );
+      const totalTime = Date.now() - startTime;
+      console.log(`🚀 Successfully registered ${slashCommandsArray.length} slash commands in ${totalTime}ms`);
+    } catch (err) {
+      console.error('❌ Failed to register slash commands:', err);
+    }
+  })();
 }
 
 // -------------------------
