@@ -98,7 +98,7 @@ const loadedPrefixCommands = loadPrefixCommands(path.join(__dirname, 'commands')
 // Load Slash Commands Recursively
 // -------------------------
 function loadSlashCommands(dir) {
-  if (!fs.existsSync(dir)) return [];
+  if (!fs.existsSync(dir)) return { loaded: [], array: [] };
 
   const loaded = [];
   const arrayForREST = [];
@@ -129,31 +129,30 @@ const { loaded: loadedSlashCommands, array: slashCommandsArray } = loadSlashComm
 );
 
 // -------------------------
-// Simple Command Logging
+// Command Logging
 // -------------------------
-console.log('Commands:', loadedPrefixCommands.join(', '));
+console.log('Prefix commands:', loadedPrefixCommands.join(', '));
 console.log('Slash commands:', loadedSlashCommands.join(', '));
 
 // -------------------------
 // Register Slash Commands (Guild)
 // -------------------------
-if (process.env.CLIENT_ID && process.env.GUILD_ID && slashCommandsArray.length > 0) {
+async function registerSlashCommands() {
+  if (!process.env.CLIENT_ID || !process.env.GUILD_ID || slashCommandsArray.length === 0) return;
+
   const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
+  console.log(`🔹 Registering ${slashCommandsArray.length} slash command(s)...`);
 
-  (async () => {
-    console.log(`🔹 Registering ${slashCommandsArray.length} slash command(s)...`);
-    const startTime = Date.now();
-
-    try {
-      await rest.put(
-        Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID),
-        { body: slashCommandsArray }
-      );
-      console.log(`🚀 Successfully registered ${slashCommandsArray.length} slash commands in ${Date.now() - startTime}ms`);
-    } catch (err) {
-      console.error('❌ Failed to register slash commands:', err);
-    }
-  })();
+  const startTime = Date.now();
+  try {
+    await rest.put(
+      Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID),
+      { body: slashCommandsArray }
+    );
+    console.log(`🚀 Successfully registered ${slashCommandsArray.length} slash commands in ${Date.now() - startTime}ms`);
+  } catch (err) {
+    console.error('❌ Failed to register slash commands:', err);
+  }
 }
 
 // -------------------------
@@ -173,8 +172,11 @@ if (fs.existsSync(eventPath)) {
 // -------------------------
 // Ready Event
 // -------------------------
-client.once(Events.ClientReady, () => {
+client.once(Events.ClientReady, async () => {
   console.log(`🚀 Logged in as ${client.user.tag}`);
+
+  // Register slash commands after bot is ready
+  await registerSlashCommands();
 });
 
 // -------------------------
