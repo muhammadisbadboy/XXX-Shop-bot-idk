@@ -63,33 +63,34 @@ const loadedPrefixCommands = loadPrefixCommands(path.join(__dirname, 'commands')
 // -------------------------
 function loadSlashCommands(dir) {
   if (!fs.existsSync(dir)) return { loaded: [], array: [] };
+
   const loaded = [];
   const arrayForREST = [];
-  for (const file of fs.readdirSync(dir)) {
-    const fullPath = path.join(dir, file);
+
+  for (const item of fs.readdirSync(dir)) {
+    const fullPath = path.join(dir, item);
     const stat = fs.statSync(fullPath);
-    if (stat.isDirectory) {
-      const { loaded: nested, array: nestedArray } = loadSlashCommands(fullPath);
-      loaded.push(...nested);
+
+    if (stat.isDirectory()) {
+      const { loaded: nestedLoaded, array: nestedArray } = loadSlashCommands(fullPath);
+      loaded.push(...nestedLoaded);
       arrayForREST.push(...nestedArray);
-    } else if (file.endsWith('.js')) {
-      const cmd = require(fullPath);
-      if (cmd?.data && typeof cmd.execute === 'function') {
-        client.slashCommands.set(cmd.data.name, cmd);
-        loaded.push(cmd.data.name);
-        arrayForREST.push(cmd.data.toJSON());
+    } else if (stat.isFile() && item.endsWith('.js')) {  // ✅ Only load .js files
+      try {
+        const cmd = require(fullPath);
+        if (cmd?.data && typeof cmd.execute === 'function') {
+          client.slashCommands.set(cmd.data.name, cmd);
+          loaded.push(cmd.data.name);
+          arrayForREST.push(cmd.data.toJSON());
+        }
+      } catch (err) {
+        console.error(`❌ Failed to load slash command ${fullPath}:`, err);
       }
     }
   }
+
   return { loaded, array: arrayForREST };
 }
-const { loaded: loadedSlashCommands, array: slashCommandsArray } = loadSlashCommands(
-  path.join(__dirname, 'slashCommands')
-);
-
-console.log('Prefix commands:', loadedPrefixCommands.join(', '));
-console.log('Slash commands:', loadedSlashCommands.join(', '));
-
 // -------------------------
 // Register Slash Commands
 // -------------------------
