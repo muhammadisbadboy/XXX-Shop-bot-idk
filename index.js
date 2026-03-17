@@ -33,14 +33,12 @@ client.slashCommands = new Collection();
 client.prefixes = process.env.PREFIXES
   ? process.env.PREFIXES.split(',').map(p => p.trim())
   : ['.'];
-
 client.isMaintenance = false;
 
 // -------------------------
 // Mod-Log System
 // -------------------------
 client.modLogChannels = new Map();
-
 client.getModLogChannel = async function (guild) {
   if (client.modLogChannels.has(guild.id)) return client.modLogChannels.get(guild.id);
 
@@ -59,7 +57,6 @@ client.getModLogChannel = async function (guild) {
   if (channel) client.modLogChannels.set(guild.id, channel);
   return channel;
 };
-
 client.logMod = async function (guild, embed) {
   const channel = await client.getModLogChannel(guild);
   if (!channel) return;
@@ -91,7 +88,6 @@ function loadPrefixCommands(dir) {
 
   return loaded;
 }
-
 const loadedPrefixCommands = loadPrefixCommands(path.join(__dirname, 'commands'));
 
 // -------------------------
@@ -123,7 +119,6 @@ function loadSlashCommands(dir) {
 
   return { loaded, array: arrayForREST };
 }
-
 const { loaded: loadedSlashCommands, array: slashCommandsArray } = loadSlashCommands(
   path.join(__dirname, 'slashCommands')
 );
@@ -164,8 +159,11 @@ if (fs.existsSync(eventPath)) {
     const event = require(path.join(eventPath, file));
     if (!event?.name || typeof event.execute !== 'function') continue;
 
-    if (event.once) client.once(event.name, (...args) => event.execute(...args, client));
-    else client.on(event.name, (...args) => event.execute(...args, client));
+    if (event.once) {
+      client.once(event.name, (...args) => event.execute(...args));
+    } else {
+      client.on(event.name, (...args) => event.execute(...args));
+    }
   }
 }
 
@@ -174,8 +172,6 @@ if (fs.existsSync(eventPath)) {
 // -------------------------
 client.once(Events.ClientReady, async () => {
   console.log(`🚀 Logged in as ${client.user.tag}`);
-
-  // Register slash commands after bot is ready
   await registerSlashCommands();
 });
 

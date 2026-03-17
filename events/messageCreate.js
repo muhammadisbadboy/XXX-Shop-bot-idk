@@ -3,19 +3,12 @@ const { Events, EmbedBuilder } = require('discord.js');
 module.exports = {
     name: Events.MessageCreate,
     async execute(message) {
-        // Ignore bots and DMs
         if (message.author.bot || !message.guild) return;
 
-        // ----------------------
-        // Prefix handling
-        // ----------------------
         const prefixes = Array.isArray(message.client.prefixes) ? message.client.prefixes : ['.'];
         const prefix = prefixes.find(p => message.content.startsWith(p));
         if (!prefix) return;
 
-        // ----------------------
-        // Maintenance check
-        // ----------------------
         if (message.client.isMaintenance && message.author.id !== process.env.OWNER_ID) {
             const maintenanceEmbed = new EmbedBuilder()
                 .setTitle('⚠️ Bot Under Maintenance')
@@ -23,13 +16,9 @@ module.exports = {
                 .setDescription(`The bot is currently under maintenance.\nPlease DM <@${process.env.OWNER_ID}> to report issues or get updates.`)
                 .setFooter({ text: 'MMPANEL • Maintenance Mode' })
                 .setTimestamp();
-
             return message.channel.send({ embeds: [maintenanceEmbed] }).catch(() => {});
         }
 
-        // ----------------------
-        // Command execution
-        // ----------------------
         const args = message.content.slice(prefix.length).trim().split(/ +/);
         const commandName = args.shift().toLowerCase();
 
@@ -42,7 +31,6 @@ module.exports = {
         if (!command) return;
 
         try {
-            // Execute command with message + args
             await command.execute(message, args);
         } catch (err) {
             console.error(err);
