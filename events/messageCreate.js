@@ -2,28 +2,24 @@ const { Events } = require('discord.js');
 
 module.exports = {
   name: Events.MessageCreate,
+  async execute(message, client) {
+    if (!message.guild || message.author.bot) return;
 
-  async execute(message) {
-    if (message.author.bot || !message.guild) return;
+    const prefixes = client.prefixes || ['.'];
+    const prefixUsed = prefixes.find(p => message.content.startsWith(p));
+    if (!prefixUsed) return;
 
-    const prefixes = message.client.prefixes || ['.'];
-    const prefix = prefixes.find(p => message.content.startsWith(p));
-    if (!prefix) return;
+    const args = message.content.slice(prefixUsed.length).trim().split(/\s+/);
+    const commandName = args.shift().toLowerCase();
 
-    const args = message.content.slice(prefix.length).trim().split(/ +/);
-    const cmdName = args.shift().toLowerCase();
-
-    const command =
-      message.client.commands.get(cmdName) ||
-      message.client.commands.find(c => c.aliases?.includes(cmdName));
-
+    const command = client.commands.get(commandName);
     if (!command) return;
 
     try {
-      return await command.execute(message, args);
+      await command.execute(message, args, client);
     } catch (err) {
-      console.error(err);
-      return message.reply('⚠️ Error executing that command.');
+      console.error(`Error running command ${commandName}:`, err);
+      message.reply('❌ Error executing that command.');
     }
   }
 };
