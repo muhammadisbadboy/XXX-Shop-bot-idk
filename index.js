@@ -20,10 +20,9 @@ const client = new Client({
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
-    GatewayIntentBits.GuildMembers,     // ✅ Needed for member fetch
-    GatewayIntentBits.GuildPresences    // ✅ Needed for status
+    GatewayIntentBits.GuildMembers
   ],
-  partials: [Partials.Channel, Partials.GuildMember]
+  partials: [Partials.Channel]
 });
 
 // -------------------------
@@ -34,19 +33,54 @@ client.slashCommands = new Collection();
 client.prefixes = process.env.PREFIXES
   ? process.env.PREFIXES.split(',').map(p => p.trim())
   : ['.'];
+
 client.isMaintenance = false;
 
 // -------------------------
-// Load Prefix Commands
+// Mod-Log System
+// -------------------------
+client.modLogChannels = new Map();
+
+client.getModLogChannel = async function (guild) {
+  if (client.modLogChannels.has(guild.id)) return client.modLogChannels.get(guild.id);
+
+  let channel = guild.channels.cache.find(
+    c => c.name === 'mod-logs' && c.type === ChannelType.GuildText
+  );
+
+  if (!channel) {
+    channel = await guild.channels.create({
+      name: 'mod-logs',
+      type: ChannelType.GuildText,
+      reason: 'Auto-created moderation log channel'
+    }).catch(() => null);
+  }
+
+  if (channel) client.modLogChannels.set(guild.id, channel);
+  return channel;
+};
+
+client.logMod = async function (guild, embed) {
+  const channel = await client.getModLogChannel(guild);
+  if (!channel) return;
+  return channel.send({ embeds: [embed] }).catch(() => {});
+};
+
+// -------------------------
+// Load Prefix Commands Recursively
 // -------------------------
 function loadPrefixCommands(dir) {
   if (!fs.existsSync(dir)) return [];
+
   const loaded = [];
+
   for (const file of fs.readdirSync(dir)) {
     const fullPath = path.join(dir, file);
     const stat = fs.statSync(fullPath);
-    if (stat.isDirectory()) loaded.push(...loadPrefixCommands(fullPath));
-    else if (file.endsWith('.js')) {
+
+    if (stat.isDirectory()) {
+      loaded.push(...loadPrefixCommands(fullPath));
+    } else if (file.endsWith('.js')) {
       const cmd = require(fullPath);
       if (cmd?.name && typeof cmd.execute === 'function') {
         client.commands.set(cmd.name, cmd);
@@ -54,12 +88,14 @@ function loadPrefixCommands(dir) {
       }
     }
   }
+
   return loaded;
 }
+
 const loadedPrefixCommands = loadPrefixCommands(path.join(__dirname, 'commands'));
 
 // -------------------------
-// Load Slash Commands
+// Load Slash Commands Recursively
 // -------------------------
 function loadSlashCommands(dir) {
   if (!fs.existsSync(dir)) return { loaded: [], array: [] };
@@ -67,42 +103,53 @@ function loadSlashCommands(dir) {
   const loaded = [];
   const arrayForREST = [];
 
-  for (const item of fs.readdirSync(dir)) {
-    const fullPath = path.join(dir, item);
+  for (const file of fs.readdirSync(dir)) {
+    const fullPath = path.join(dir, file);
     const stat = fs.statSync(fullPath);
 
     if (stat.isDirectory()) {
-      const { loaded: nestedLoaded, array: nestedArray } = loadSlashCommands(fullPath);
-      loaded.push(...nestedLoaded);
+      const { loaded: nested, array: nestedArray } = loadSlashCommands(fullPath);
+      loaded.push(...nested);
       arrayForREST.push(...nestedArray);
-    } else if (stat.isFile() && item.endsWith('.js')) {  // ✅ Only load .js files
-      try {
-        const cmd = require(fullPath);
-        if (cmd?.data && typeof cmd.execute === 'function') {
-          client.slashCommands.set(cmd.data.name, cmd);
-          loaded.push(cmd.data.name);
-          arrayForREST.push(cmd.data.toJSON());
-        }
-      } catch (err) {
-        console.error(`❌ Failed to load slash command ${fullPath}:`, err);
+    } else if (file.endsWith('.js')) {
+      const cmd = require(fullPath);
+      if (cmd?.data && typeof cmd.execute === 'function') {
+        client.slashCommands.set(cmd.data.name, cmd);
+        loaded.push(cmd.data.name);
+        arrayForREST.push(cmd.data.toJSON());
       }
     }
   }
 
   return { loaded, array: arrayForREST };
 }
+
+const { loaded: loadedSlashCommands, array: slashCommandsArray } = loadSlashCommands(
+  path.join(__dirname, 'slashCommands')
+);
+
 // -------------------------
-// Register Slash Commands
+// Command Logging
+// -------------------------
+console.log('Prefix commands:', loadedPrefixCommands.join(', '));
+console.log('Slash commands:', loadedSlashCommands.join(', '));
+
+// -------------------------
+// Register Slash Commands (Guild)
 // -------------------------
 async function registerSlashCommands() {
-  if (!process.env.CLIENT_ID || !process.env.GUILD_ID || slashCommandsArray.length === 0) return;
+  if (!process.env.CLIENT_ID || !process.env.GUILD_ID || !slashCommandsArray.length) return;
+
   const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
+  console.log(`🔹 Registering ${slashCommandsArray.length} slash command(s)...`);
+
+  const startTime = Date.now();
   try {
     await rest.put(
       Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID),
       { body: slashCommandsArray }
     );
-    console.log(`🚀 Registered ${slashCommandsArray.length} slash commands`);
+    console.log(`🚀 Successfully registered ${slashCommandsArray.length} slash commands in ${Date.now() - startTime}ms`);
   } catch (err) {
     console.error('❌ Failed to register slash commands:', err);
   }
@@ -116,6 +163,7 @@ if (fs.existsSync(eventPath)) {
   for (const file of fs.readdirSync(eventPath).filter(f => f.endsWith('.js'))) {
     const event = require(path.join(eventPath, file));
     if (!event?.name || typeof event.execute !== 'function') continue;
+
     if (event.once) client.once(event.name, (...args) => event.execute(...args, client));
     else client.on(event.name, (...args) => event.execute(...args, client));
   }
@@ -126,6 +174,8 @@ if (fs.existsSync(eventPath)) {
 // -------------------------
 client.once(Events.ClientReady, async () => {
   console.log(`🚀 Logged in as ${client.user.tag}`);
+
+  // Register slash commands after bot is ready
   await registerSlashCommands();
 });
 
