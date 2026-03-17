@@ -3,15 +3,18 @@ const { Events, EmbedBuilder } = require('discord.js');
 module.exports = {
     name: Events.MessageCreate,
     async execute(message) {
+        // Ignore bots and DMs
         if (message.author.bot || !message.guild) return;
 
-        // Make sure prefixes are loaded as an array
-        const prefixes = message.client.prefixes || ['.']; // fallback
+        // ----------------------
+        // Prefix handling
+        // ----------------------
+        const prefixes = Array.isArray(message.client.prefixes) ? message.client.prefixes : ['.'];
         const prefix = prefixes.find(p => message.content.startsWith(p));
         if (!prefix) return;
 
         // ----------------------
-        // Maintenance Check
+        // Maintenance check
         // ----------------------
         if (message.client.isMaintenance && message.author.id !== process.env.OWNER_ID) {
             const maintenanceEmbed = new EmbedBuilder()
@@ -25,18 +28,22 @@ module.exports = {
         }
 
         // ----------------------
-        // Normal command execution
+        // Command execution
         // ----------------------
         const args = message.content.slice(prefix.length).trim().split(/ +/);
         const commandName = args.shift().toLowerCase();
 
-        const command = message.client.commands.get(commandName) ||
-                        message.client.commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName));
+        const command =
+            message.client.commands.get(commandName) ||
+            message.client.commands.find(
+                cmd => Array.isArray(cmd.aliases) && cmd.aliases.includes(commandName)
+            );
 
         if (!command) return;
 
         try {
-            await command.execute(message, args); // client is accessible via message.client inside commands
+            // Execute command with message + args
+            await command.execute(message, args);
         } catch (err) {
             console.error(err);
             message.reply('⚠️ Error executing that command.');
