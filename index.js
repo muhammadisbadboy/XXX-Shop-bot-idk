@@ -20,9 +20,10 @@ const client = new Client({
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
-    GatewayIntentBits.GuildMembers
+    GatewayIntentBits.GuildMembers,     // ✅ Required for member info
+    GatewayIntentBits.GuildPresences    // ✅ Required for status
   ],
-  partials: [Partials.Channel]
+  partials: [Partials.Channel, Partials.GuildMember]
 });
 
 // -------------------------
@@ -36,48 +37,16 @@ client.prefixes = process.env.PREFIXES
 client.isMaintenance = false;
 
 // -------------------------
-// Mod-Log System
-// -------------------------
-client.modLogChannels = new Map();
-client.getModLogChannel = async function (guild) {
-  if (client.modLogChannels.has(guild.id)) return client.modLogChannels.get(guild.id);
-
-  let channel = guild.channels.cache.find(
-    c => c.name === 'mod-logs' && c.type === ChannelType.GuildText
-  );
-
-  if (!channel) {
-    channel = await guild.channels.create({
-      name: 'mod-logs',
-      type: ChannelType.GuildText,
-      reason: 'Auto-created moderation log channel'
-    }).catch(console.error);
-  }
-
-  if (channel) client.modLogChannels.set(guild.id, channel);
-  return channel;
-};
-client.logMod = async function (guild, embed) {
-  const channel = await client.getModLogChannel(guild);
-  if (!channel) return;
-  return channel.send({ embeds: [embed] }).catch(console.error);
-};
-
-// -------------------------
-// Load Prefix Commands Recursively
+// Load Prefix Commands
 // -------------------------
 function loadPrefixCommands(dir) {
   if (!fs.existsSync(dir)) return [];
-
   const loaded = [];
-
   for (const file of fs.readdirSync(dir)) {
     const fullPath = path.join(dir, file);
     const stat = fs.statSync(fullPath);
-
-    if (stat.isDirectory()) {
-      loaded.push(...loadPrefixCommands(fullPath));
-    } else if (file.endsWith('.js')) {
+    if (stat.isDirectory()) loaded.push(...loadPrefixCommands(fullPath));
+    else if (file.endsWith('.js')) {
       const cmd = require(fullPath);
       if (cmd?.name && typeof cmd.execute === 'function') {
         client.commands.set(cmd.name, cmd);
@@ -85,24 +54,20 @@ function loadPrefixCommands(dir) {
       }
     }
   }
-
   return loaded;
 }
 const loadedPrefixCommands = loadPrefixCommands(path.join(__dirname, 'commands'));
 
 // -------------------------
-// Load Slash Commands Recursively
+// Load Slash Commands
 // -------------------------
 function loadSlashCommands(dir) {
   if (!fs.existsSync(dir)) return { loaded: [], array: [] };
-
   const loaded = [];
   const arrayForREST = [];
-
   for (const file of fs.readdirSync(dir)) {
     const fullPath = path.join(dir, file);
     const stat = fs.statSync(fullPath);
-
     if (stat.isDirectory()) {
       const { loaded: nested, array: nestedArray } = loadSlashCommands(fullPath);
       loaded.push(...nested);
@@ -116,35 +81,27 @@ function loadSlashCommands(dir) {
       }
     }
   }
-
   return { loaded, array: arrayForREST };
 }
 const { loaded: loadedSlashCommands, array: slashCommandsArray } = loadSlashCommands(
   path.join(__dirname, 'slashCommands')
 );
 
-// -------------------------
-// Command Logging
-// -------------------------
 console.log('Prefix commands:', loadedPrefixCommands.join(', '));
 console.log('Slash commands:', loadedSlashCommands.join(', '));
 
 // -------------------------
-// Register Slash Commands (Guild)
+// Register Slash Commands
 // -------------------------
 async function registerSlashCommands() {
   if (!process.env.CLIENT_ID || !process.env.GUILD_ID || slashCommandsArray.length === 0) return;
-
   const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
-  console.log(`🔹 Registering ${slashCommandsArray.length} slash command(s)...`);
-
-  const startTime = Date.now();
   try {
     await rest.put(
       Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID),
       { body: slashCommandsArray }
     );
-    console.log(`🚀 Successfully registered ${slashCommandsArray.length} slash commands in ${Date.now() - startTime}ms`);
+    console.log(`🚀 Registered ${slashCommandsArray.length} slash commands`);
   } catch (err) {
     console.error('❌ Failed to register slash commands:', err);
   }
@@ -158,12 +115,8 @@ if (fs.existsSync(eventPath)) {
   for (const file of fs.readdirSync(eventPath).filter(f => f.endsWith('.js'))) {
     const event = require(path.join(eventPath, file));
     if (!event?.name || typeof event.execute !== 'function') continue;
-
-    if (event.once) {
-      client.once(event.name, (...args) => event.execute(...args));
-    } else {
-      client.on(event.name, (...args) => event.execute(...args));
-    }
+    if (event.once) client.once(event.name, (...args) => event.execute(...args));
+    else client.on(event.name, (...args) => event.execute(...args));
   }
 }
 
