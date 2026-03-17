@@ -1,15 +1,15 @@
 require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
-const { 
-  Client, 
-  Collection, 
-  GatewayIntentBits, 
-  Partials, 
-  ChannelType, 
-  Events, 
-  REST, 
-  Routes 
+const {
+  Client,
+  Collection,
+  GatewayIntentBits,
+  Partials,
+  ChannelType,
+  Events,
+  REST,
+  Routes
 } = require('discord.js');
 
 // -------------------------
@@ -96,7 +96,7 @@ loadPrefixCommands(path.join(__dirname, 'commands'));
 console.log(`✅ Loaded prefix commands: ${[...client.commands.keys()].join(', ')}`);
 
 // -------------------------
-// Load Slash Commands from slashCommands folder
+// Load Slash Commands
 // -------------------------
 const slashDir = path.join(__dirname, 'slashCommands');
 if (fs.existsSync(slashDir)) {
@@ -111,26 +111,38 @@ if (fs.existsSync(slashDir)) {
 
   console.log(`✅ Loaded slash commands: ${[...client.slashCommands.keys()].join(', ')}`);
 
-  // Register to guild for testing (fast)
+  // -------------------------
+  // Register Slash Commands (Guild)
+  // -------------------------
   if (process.env.CLIENT_ID && process.env.GUILD_ID && commandsArray.length) {
     const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
+
     (async () => {
+      const start = Date.now();
       try {
         console.log('🔹 Registering slash commands...');
+
         await rest.put(
           Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID),
           { body: commandsArray }
         );
-        console.log('✅ Slash commands registered.');
+
+        const duration = Date.now() - start;
+        console.log(`✅ Slash commands registered in ${duration}ms.`);
+        console.log(
+          'Registered commands:',
+          commandsArray.map(c => c.name).join(', ')
+        );
       } catch (err) {
-        console.error(err);
+        const duration = Date.now() - start;
+        console.error(`❌ Failed to register slash commands after ${duration}ms:`, err);
       }
     })();
   }
 }
 
 // -------------------------
-// Load Events (except messageCreate)
+// Load Events
 // -------------------------
 const eventPath = path.join(__dirname, 'events');
 if (fs.existsSync(eventPath)) {
@@ -181,7 +193,7 @@ client.on(Events.MessageCreate, async (message) => {
 });
 
 // -------------------------
-// Handle Slash Commands (interactionCreate event fallback)
+// Handle Slash Commands
 // -------------------------
 client.on(Events.InteractionCreate, async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
