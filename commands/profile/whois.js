@@ -3,15 +3,7 @@ module.exports = {
   aliases: ['w'],
   async execute(message, args) {
     try {
-      let member;
-
-      if (message.mentions.members.size > 0) {
-        member = message.mentions.members.first();
-      } else {
-        // Fetch the member if not mentioned
-        member = await message.guild.members.fetch(message.author.id);
-      }
-
+      const member = message.mentions.members.first() || await message.guild.members.fetch(message.author.id);
       const user = member.user;
 
       await message.channel.send({
@@ -29,7 +21,6 @@ module.exports = {
           footer: { text: `Requested by ${message.author.tag}`, icon_url: message.author.displayAvatarURL({ dynamic: true }) }
         }]
       });
-
     } catch (err) {
       console.error(err);
       message.channel.send('⚠️ Could not fetch user info. Make sure the user exists!');

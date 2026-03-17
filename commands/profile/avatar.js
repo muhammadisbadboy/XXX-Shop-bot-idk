@@ -1,11 +1,9 @@
-Ppmodule.exports = {
+module.exports = {
   name: 'avatar',
   aliases: ['av', 'pfp'],
   async execute(message, args) {
     try {
-      // Fetch member if mentioned, else fallback to author
       const user = message.mentions.users.first() || message.author;
-
       await message.channel.send({
         embeds: [{
           title: `${user.tag}'s Avatar`,
