@@ -6,14 +6,13 @@ const {
   Collection,
   GatewayIntentBits,
   Partials,
-  ChannelType,
   Events,
   REST,
   Routes
 } = require('discord.js');
 
 // -------------------------
-// Create Client
+// CLIENT
 // -------------------------
 const client = new Client({
   intents: [
@@ -26,7 +25,7 @@ const client = new Client({
 });
 
 // -------------------------
-// Collections & Prefixes
+// SETUP
 // -------------------------
 client.commands = new Collection();
 client.slashCommands = new Collection();
@@ -37,51 +36,21 @@ client.prefixes = process.env.PREFIXES
 client.isMaintenance = false;
 
 // -------------------------
-// Mod-Log System
+// LOAD PREFIX COMMANDS
 // -------------------------
-client.modLogChannels = new Map();
-
-client.getModLogChannel = async function (guild) {
-  if (client.modLogChannels.has(guild.id)) return client.modLogChannels.get(guild.id);
-
-  let channel = guild.channels.cache.find(
-    c => c.name === 'mod-logs' && c.type === ChannelType.GuildText
-  );
-
-  if (!channel) {
-    channel = await guild.channels.create({
-      name: 'mod-logs',
-      type: ChannelType.GuildText,
-      reason: 'Auto-created moderation log channel'
-    }).catch(() => null);
-  }
-
-  if (channel) client.modLogChannels.set(guild.id, channel);
-  return channel;
-};
-
-client.logMod = async function (guild, embed) {
-  const channel = await client.getModLogChannel(guild);
-  if (!channel) return;
-  return channel.send({ embeds: [embed] }).catch(() => {});
-};
-
-// -------------------------
-// Load Prefix Commands Recursively
-// -------------------------
-function loadPrefixCommands(dir) {
+function loadCommands(dir) {
   if (!fs.existsSync(dir)) return [];
 
   const loaded = [];
 
   for (const file of fs.readdirSync(dir)) {
-    const fullPath = path.join(dir, file);
-    const stat = fs.statSync(fullPath);
+    const full = path.join(dir, file);
+    const stat = fs.statSync(full);
 
     if (stat.isDirectory()) {
-      loaded.push(...loadPrefixCommands(fullPath));
+      loaded.push(...loadCommands(full));
     } else if (file.endsWith('.js')) {
-      const cmd = require(fullPath);
+      const cmd = require(full);
       if (cmd?.name && typeof cmd.execute === 'function') {
         client.commands.set(cmd.name, cmd);
         loaded.push(cmd.name);
@@ -92,94 +61,95 @@ function loadPrefixCommands(dir) {
   return loaded;
 }
 
-const loadedPrefixCommands = loadPrefixCommands(path.join(__dirname, 'commands'));
+const prefixLoaded = loadCommands(path.join(__dirname, 'commands'));
 
 // -------------------------
-// Load Slash Commands Recursively
+// LOAD SLASH COMMANDS
 // -------------------------
-function loadSlashCommands(dir) {
+function loadSlash(dir) {
   if (!fs.existsSync(dir)) return { loaded: [], array: [] };
 
   const loaded = [];
-  const arrayForREST = [];
+  const arr = [];
 
   for (const file of fs.readdirSync(dir)) {
-    const fullPath = path.join(dir, file);
-    const stat = fs.statSync(fullPath);
+    const full = path.join(dir, file);
+    const stat = fs.statSync(full);
 
     if (stat.isDirectory()) {
-      const { loaded: nested, array: nestedArray } = loadSlashCommands(fullPath);
-      loaded.push(...nested);
-      arrayForREST.push(...nestedArray);
+      const sub = loadSlash(full);
+      loaded.push(...sub.loaded);
+      arr.push(...sub.array);
     } else if (file.endsWith('.js')) {
-      const cmd = require(fullPath);
+      const cmd = require(full);
       if (cmd?.data && typeof cmd.execute === 'function') {
         client.slashCommands.set(cmd.data.name, cmd);
         loaded.push(cmd.data.name);
-        arrayForREST.push(cmd.data.toJSON());
+        arr.push(cmd.data.toJSON());
       }
     }
   }
 
-  return { loaded, array: arrayForREST };
+  return { loaded, array: arr };
 }
 
-const { loaded: loadedSlashCommands, array: slashCommandsArray } = loadSlashCommands(
+const { loaded: slashLoaded, array: slashArray } = loadSlash(
   path.join(__dirname, 'slashCommands')
 );
 
 // -------------------------
-// Command Logging
+// LOG LOADED
 // -------------------------
-console.log('Prefix commands:', loadedPrefixCommands.join(', '));
-console.log('Slash commands:', loadedSlashCommands.join(', '));
+console.log('Commands:', prefixLoaded.join(', ') || 'None');
+console.log('Slash Commands:', slashLoaded.join(', ') || 'None');
 
 // -------------------------
-// Register Slash Commands (Guild)
+// REGISTER SLASH
 // -------------------------
-async function registerSlashCommands() {
-  if (!process.env.CLIENT_ID || !process.env.GUILD_ID || !slashCommandsArray.length) return;
+async function registerSlash() {
+  if (!process.env.CLIENT_ID || !process.env.GUILD_ID || !slashArray.length) return;
 
   const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
-  console.log(`🔹 Registering ${slashCommandsArray.length} slash command(s)...`);
 
-  const startTime = Date.now();
   try {
     await rest.put(
       Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID),
-      { body: slashCommandsArray }
+      { body: slashArray }
     );
-    console.log(`🚀 Successfully registered ${slashCommandsArray.length} slash commands in ${Date.now() - startTime}ms`);
+    console.log(`✅ Registered ${slashArray.length} slash commands`);
   } catch (err) {
-    console.error('❌ Failed to register slash commands:', err);
+    console.error('Slash register error:', err);
   }
 }
 
 // -------------------------
-// Load Events
+// LOAD EVENTS (ONLY ONCE)
 // -------------------------
-const eventPath = path.join(__dirname, 'events');
-if (fs.existsSync(eventPath)) {
-  for (const file of fs.readdirSync(eventPath).filter(f => f.endsWith('.js'))) {
-    const event = require(path.join(eventPath, file));
-    if (!event?.name || typeof event.execute !== 'function') continue;
+const eventsPath = path.join(__dirname, 'events');
 
-    if (event.once) client.once(event.name, (...args) => event.execute(...args, client));
-    else client.on(event.name, (...args) => event.execute(...args, client));
+if (fs.existsSync(eventsPath)) {
+  for (const file of fs.readdirSync(eventsPath).filter(f => f.endsWith('.js'))) {
+    const event = require(path.join(eventsPath, file));
+
+    if (!event?.name || !event.execute) continue;
+
+    if (event.once) {
+      client.once(event.name, (...args) => event.execute(...args, client));
+    } else {
+      client.on(event.name, (...args) => event.execute(...args, client));
+    }
   }
 }
 
 // -------------------------
-// Ready Event
+// READY
 // -------------------------
 client.once(Events.ClientReady, async () => {
   console.log(`🚀 Logged in as ${client.user.tag}`);
-
-  // Register slash commands after bot is ready
-  await registerSlashCommands();
+  await registerSlash();
 });
 
 // -------------------------
-// Login
+// LOGIN
 // -------------------------
-client.login(process.env.TOKEN).catch(err => console.error('Failed to login:', err));
+client.login(process.env.TOKEN).catch(console.error);
