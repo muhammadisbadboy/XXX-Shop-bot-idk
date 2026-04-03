@@ -31,7 +31,7 @@ module.exports = {
 
     const mention = message.mentions.users.first();
     if (!mention) {
-      return message.reply("❌ Who you tryna vouch for? Tag them or don’t even try.");
+      return message.reply("❌ Bro, you tryna vouch? Tag a user or stfu.");
     }
 
     const rep = args[0];
