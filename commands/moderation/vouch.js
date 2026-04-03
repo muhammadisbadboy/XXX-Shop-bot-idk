@@ -8,17 +8,17 @@ module.exports = {
 
   async execute(message, args) {
     const channelId = process.env.SHOP_VOUCH_CHANNEL;
-    if (!channelId) return message.reply("❌ Vouch channel not set. Fix it, bro.");
+    if (!channelId) return message.reply("❌ Vouch channel not configured. Contact an admin.");
 
     const now = Date.now();
     const userId = message.author.id;
 
-    // 5 min cooldown
+    // 5 minute cooldown
     if (cooldown.has(userId)) {
       const expiration = cooldown.get(userId) + 5 * 60 * 1000;
       if (now < expiration) {
         const timeLeft = ((expiration - now) / 1000).toFixed(0);
-        return message.reply(`⏳ Chill for ${timeLeft}s before spamming another vouch.`);
+        return message.reply(`⏳ Please wait ${timeLeft}s before sending another vouch.`);
       }
     }
     cooldown.set(userId, now);
@@ -26,18 +26,18 @@ module.exports = {
 
     // Validate args
     if (args.length < 2) {
-      return message.reply("❌ Usage: `.vouch +rep username message` — don’t skip steps, bro.");
+      return message.reply("❌ Usage: `.vouch +rep username message` — make sure to include both the vouch type and username.");
     }
 
-    const rep = args[0];
-    const targetUser = args[1]; // just text, no ping required
-    const content = args.slice(2).join(" ");
+    const rep = args[0];                  // +rep / -rep
+    const targetUser = args[1];           // plain text username
+    const content = args.slice(2).join(" "); // message content
 
     const channel = message.guild.channels.cache.get(channelId);
-    if (!channel) return message.reply("❌ Vouch channel missing. Fix your setup.");
+    if (!channel) return message.reply("❌ Vouch channel not found. Check setup.");
 
     if (!channel.permissionsFor(message.guild.members.me).has(PermissionsBitField.Flags.ManageWebhooks)) {
-      return message.reply("❌ I need MANAGE WEBHOOKS perms in that channel. Give it.");
+      return message.reply("❌ I require **Manage Webhooks** permission in the vouch channel.");
     }
 
     try {
@@ -47,16 +47,22 @@ module.exports = {
         avatar: message.author.displayAvatarURL(),
       });
 
-      // Send vouch text
-      await webhook.send(`🌟 **VOUCH**\n${rep} ${targetUser}\n💬 ${content}\n— from ${message.author.username}`);
+      // Send vouch
+      await webhook.send(
+        `🌟 **VOUCH RECEIVED** 🌟\n` +
+        `📝 Type: ${rep}\n` +
+        `👤 User: ${targetUser}\n` +
+        `💬 Message: ${content}\n` +
+        `✅ Submitted by: ${message.author.username}`
+      );
 
-      // Delete webhook immediately
+      // Delete webhook
       await webhook.delete();
 
-      message.reply("✅ Vouch sent. Don’t waste my time next one.");
+      message.reply("✅ Vouch successfully sent!");
     } catch (err) {
       console.error(err);
-      message.reply("❌ Something broke. Tell the dev or deal with it.");
+      message.reply("❌ Failed to send vouch. Contact an admin.");
     }
   },
 };
