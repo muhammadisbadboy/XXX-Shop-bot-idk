@@ -26,16 +26,12 @@ module.exports = {
 
     // Validate args
     if (args.length < 2) {
-      return message.reply("❌ Usage: `.vouch +rep @user message` — don’t skip steps, bro.");
-    }
-
-    const mention = message.mentions.users.first();
-    if (!mention) {
-      return message.reply("❌ Bro, you tryna vouch? Tag a user or stfu.");
+      return message.reply("❌ Usage: `.vouch +rep username message` — don’t skip steps, bro.");
     }
 
     const rep = args[0];
-    const content = args.slice(1).join(" ");
+    const targetUser = args[1]; // just text, no ping required
+    const content = args.slice(2).join(" ");
 
     const channel = message.guild.channels.cache.get(channelId);
     if (!channel) return message.reply("❌ Vouch channel missing. Fix your setup.");
@@ -52,7 +48,7 @@ module.exports = {
       });
 
       // Send vouch text
-      await webhook.send(`🌟 **VOUCH**\n${rep} ${mention}\n💬 ${content}\n— from ${message.author}`);
+      await webhook.send(`🌟 **VOUCH**\n${rep} ${targetUser}\n💬 ${content}\n— from ${message.author.username}`);
 
       // Delete webhook immediately
       await webhook.delete();
