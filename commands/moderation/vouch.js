@@ -8,8 +8,7 @@ module.exports = {
 
   async execute(message, args) {
     const channelId = process.env.SHOP_VOUCH_CHANNEL;
-
-    if (!channelId) return message.reply("❌ Vouch channel not configured.");
+    if (!channelId) return message.reply("❌ Vouch channel not set. Fix it, bro.");
 
     const now = Date.now();
     const userId = message.author.id;
@@ -19,7 +18,7 @@ module.exports = {
       const expiration = cooldown.get(userId) + 5 * 60 * 1000;
       if (now < expiration) {
         const timeLeft = ((expiration - now) / 1000).toFixed(0);
-        return message.reply(`⏳ Wait ${timeLeft}s before vouching again.`);
+        return message.reply(`⏳ Chill for ${timeLeft}s before spamming another vouch.`);
       }
     }
     cooldown.set(userId, now);
@@ -27,22 +26,22 @@ module.exports = {
 
     // Validate args
     if (args.length < 2) {
-      return message.reply("❌ Usage: `.vouch +rep @user message`");
+      return message.reply("❌ Usage: `.vouch +rep @user message` — don’t skip steps, bro.");
     }
 
     const mention = message.mentions.users.first();
     if (!mention) {
-      return message.reply("❌ You must mention a user to vouch for.");
+      return message.reply("❌ Who you tryna vouch for? Tag them or don’t even try.");
     }
 
     const rep = args[0];
     const content = args.slice(1).join(" ");
 
     const channel = message.guild.channels.cache.get(channelId);
-    if (!channel) return message.reply("❌ Vouch channel not found.");
+    if (!channel) return message.reply("❌ Vouch channel missing. Fix your setup.");
 
     if (!channel.permissionsFor(message.guild.members.me).has(PermissionsBitField.Flags.ManageWebhooks)) {
-      return message.reply("❌ I need Manage Webhooks permission in the vouch channel.");
+      return message.reply("❌ I need MANAGE WEBHOOKS perms in that channel. Give it.");
     }
 
     try {
@@ -58,10 +57,10 @@ module.exports = {
       // Delete webhook immediately
       await webhook.delete();
 
-      message.reply("✅ Vouch sent successfully!");
+      message.reply("✅ Vouch sent. Don’t waste my time next one.");
     } catch (err) {
       console.error(err);
-      message.reply("❌ Failed to send vouch.");
+      message.reply("❌ Something broke. Tell the dev or deal with it.");
     }
   },
 };
