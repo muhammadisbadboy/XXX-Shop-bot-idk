@@ -35,7 +35,7 @@ module.exports = {
       .setTitle(title)
       .setDescription(description)
       .setColor('#8B5CF6') // Purple theme
-      .setFooter({ text: 'Trade Market' })
+      .setFooter({ text: 'Valix HUB :3' })
       .setTimestamp();
 
     await message.channel.send({ embeds: [embed] });
