@@ -2,62 +2,41 @@ const { PermissionsBitField } = require('discord.js');
 
 module.exports = {
     name: 'webhook',
-    description: 'Send message via webhook with optional ping + custom identity',
+    description: 'Send message via webhook (admin only, clean, supports long text)',
     async execute(message, args) {
 
-        // 🔒 Permission check
-        if (!message.member.permissions.has(PermissionsBitField.Flags.ManageMessages)) {
-            return message.reply('❌ You do not have permission to use this command.');
+        // 🔒 Admin only
+        if (!message.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+            return message.reply('❌ You need Administrator to use this.');
         }
 
-        if (args.length < 2) {
-            return message.reply('❌ Usage: .webhook <text> <true/false> [name] [avatarURL]');
-        }
-
-        // Last arg = true/false
-        const pingToggle = args[args.length - 1].toLowerCase();
-        if (pingToggle !== 'true' && pingToggle !== 'false') {
-            return message.reply('❌ Last argument must be true or false.');
-        }
-
-        // Extract optional name & avatar
-        let name = message.member.displayName;
-        let avatar = message.author.displayAvatarURL();
-
-        // Check if user added custom name/avatar
-        if (args.length >= 4) {
-            name = args[args.length - 3];
-            avatar = args[args.length - 2];
-            args = args.slice(0, -3);
-        } else {
-            args = args.slice(0, -1);
+        if (!args.length) {
+            return message.reply('❌ Provide a message to send.');
         }
 
         let text = args.join(' ');
-
-        // 🧠 Handle ping logic
-        if (pingToggle === 'true') {
-            // Allow real pings
-        } else {
-            // Block pings
-            text = text
-                .replace(/@everyone/g, '[everyone]')
-                .replace(/@here/g, '[here]');
-        }
 
         // Delete original message
         try { await message.delete(); } catch {}
 
         try {
+            // Create webhook
             const webhook = await message.channel.createWebhook({
-                name: name,
-                avatar: avatar
+                name: message.member.displayName,
+                avatar: message.author.displayAvatarURL()
             });
 
-            await webhook.send({
-                content: text
-            });
+            // 📏 Discord limit = 2000 chars → split if needed
+            const chunks = text.match(/[\s\S]{1,2000}/g);
 
+            for (const chunk of chunks) {
+                await webhook.send({
+                    content: chunk,
+                    allowedMentions: { parse: ['everyone'] } // allows @everyone/@here cleanly
+                });
+            }
+
+            // Delete webhook after sending
             await webhook.delete();
 
         } catch (err) {
