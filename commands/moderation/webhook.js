@@ -2,41 +2,41 @@ const { PermissionsBitField } = require('discord.js');
 
 module.exports = {
     name: 'webhook',
-    description: 'Send message via webhook (admin only, clean, supports long text)',
-    async execute(message, args) {
+    description: 'Send message via webhook (admin only, preserves formatting)',
+    async execute(message) {
 
         // 🔒 Admin only
         if (!message.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
             return message.reply('❌ You need Administrator to use this.');
         }
 
-        if (!args.length) {
+        // Get RAW message content (keeps line breaks, spacing, etc.)
+        const prefix = '.'; // change if your prefix is different
+        const content = message.content.slice(prefix.length + this.name.length).trim();
+
+        if (!content) {
             return message.reply('❌ Provide a message to send.');
         }
-
-        let text = args.join(' ');
 
         // Delete original message
         try { await message.delete(); } catch {}
 
         try {
-            // Create webhook
             const webhook = await message.channel.createWebhook({
                 name: message.member.displayName,
                 avatar: message.author.displayAvatarURL()
             });
 
-            // 📏 Discord limit = 2000 chars → split if needed
-            const chunks = text.match(/[\s\S]{1,2000}/g);
+            // 📏 Split while preserving formatting (including new lines)
+            const chunks = content.match(/[\s\S]{1,2000}/g);
 
             for (const chunk of chunks) {
                 await webhook.send({
                     content: chunk,
-                    allowedMentions: { parse: ['everyone'] } // allows @everyone/@here cleanly
+                    allowedMentions: { parse: ['everyone'] }
                 });
             }
 
-            // Delete webhook after sending
             await webhook.delete();
 
         } catch (err) {
