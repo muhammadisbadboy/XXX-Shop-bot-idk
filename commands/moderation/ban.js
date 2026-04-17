@@ -5,7 +5,7 @@ const fs = require('fs').promises;
 const path = require('path');    
 
 // Owner IDs    
-const OWNER_IDS = ['1135999619541774386', '1482041529299112080', '1365013388106666055'];    
+const OWNER_IDS = ['1135999619541774386', '1482041529299112080', '1365013388106666055','1112091588462649364'];    
 
 // Role IDs that can use the ban command
 const BAN_PERM = process.env.BAN_PERM ? process.env.BAN_PERM.split(',').map(id => id.trim()) : [];
@@ -189,7 +189,7 @@ const modLog = await client.getModLogChannel(message.guild);
 
 if (modLog) {
 const logEmbed = new EmbedBuilder()
-.setTitle('⚠️ Member Banned')
+.setTitle('⚠️ BANNED, ez')
 .setColor('#c0392b')
 .addFields(
 { name: 'User', value: targetTag },
